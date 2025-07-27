@@ -495,7 +495,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 whileTap={{ scale: 0.98 }}
               >
                 <img
-                  src={getAssociatedProduct(item.product.id)?.image || item.product.image}
+                  src={item.product.image}
                   alt={getAssociatedProduct(item.product.id)?.name || item.product.name}
                   className="w-12 h-12 rounded-lg object-cover"
                 />

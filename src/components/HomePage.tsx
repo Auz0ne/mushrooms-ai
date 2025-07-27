@@ -551,7 +551,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       controls={false}
                       disablePictureInPicture
                       poster={currentProduct.image}
-                      preload="metadata"
+                      preload="auto"
                       onLoadStart={() => {
                         console.log('Video loading started');
                       }}
