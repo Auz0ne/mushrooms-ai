@@ -17,7 +17,7 @@ A modern, AI-powered e-commerce application for premium mushroom supplements bui
 - **Animations**: Framer Motion
 - **Backend**: Supabase
 - **Build Tool**: Next.js
-- **Deployment**: Netlify
+- **Deployment**: Vercel
 
 ## Getting Started
 
@@ -65,14 +65,21 @@ Run the migrations in the `supabase/migrations` folder to set up your database s
 
 ## Deployment
 
-### Netlify (Recommended)
+### Vercel (Recommended)
 
-1. Build the project:
-```bash
-npm run build
-```
+1. Connect your GitHub repository to Vercel:
+   - Go to [vercel.com](https://vercel.com)
+   - Import your GitHub repository
+   - Vercel will automatically detect Next.js and configure the build
 
-2. Deploy the `dist` folder to Netlify, or connect your GitHub repository for automatic deployments.
+2. Set up environment variables in Vercel:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `OPENAI_API_KEY`
+
+3. Deploy automatically:
+   - Every push to main branch triggers automatic deployment
+   - Preview deployments for pull requests
 
 ### Other Platforms
 

@@ -9,7 +9,7 @@ This is a React TypeScript e-commerce application for mushroom supplements with 
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
 - **Backend**: Supabase (PostgreSQL)
-- **Deployment**: Netlify
+- **Deployment**: Vercel
 - **Notifications**: React Hot Toast
 
 ## Project Structure & Conventions
@@ -151,12 +151,12 @@ export const Component: React.FC<ComponentProps> = ({
 
 ### Environment Variables
 - **Supabase**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- **Build**: Configure for Netlify deployment
+- **Build**: Configure for Vercel deployment
 - **Development**: Use Next.js dev server
 
 ### Build & Deployment
 - **Next.js Configuration**: Use custom next.config.js for static export
-- **Netlify**: Configure for SPA redirects
+- **Vercel**: Configure for automatic deployments
 - **TypeScript**: Use strict mode with custom config
 - **ESLint**: Use React hooks and refresh plugins
 

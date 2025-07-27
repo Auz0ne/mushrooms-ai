@@ -188,10 +188,11 @@ Monitor these error types:
 
 ### Vercel Deployment
 
-1. Ensure environment variables are set in Vercel
-2. Deploy automatically via GitHub integration
-3. Test the live deployment
-4. Monitor for any API errors
+1. Connect your GitHub repository to Vercel
+2. Set up environment variables in Vercel dashboard
+3. Deploy automatically via GitHub integration
+4. Test the live deployment at your Vercel URL
+5. Monitor for any API errors in Vercel function logs
 
 ### Environment Variables Checklist
 
