@@ -5,6 +5,7 @@ import { CartItem, Product } from '../types';
 import { getCategoryForEffect } from '../utils/categoryIcons';
 import { ProductService } from '../services/productService';
 import { StripeService } from '../services/stripeService';
+import { StripeProductService } from '../services/stripeProductService';
 import { Promotion } from './Promotion';
 
 interface CheckoutPageProps {
@@ -47,6 +48,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   onProductClick,
 }) => {
   const [categoryScores, setCategoryScores] = useState<CategoryScore[]>([]);
+  const [stripeProducts, setStripeProducts] = useState<any[]>([]);
   const [archetypes, setArchetypes] = useState<Archetype[]>([
     {
       id: 'cognitive_warrior',
@@ -123,9 +125,29 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     loadProducts();
   }, []);
 
+  // Load Stripe products on component mount
+  useEffect(() => {
+    const loadStripeProducts = async () => {
+      try {
+        const stripeProductsData = await StripeProductService.getAllProducts();
+        setStripeProducts(stripeProductsData);
+        console.log('Loaded Stripe products:', stripeProductsData.length);
+      } catch (error) {
+        console.error('Failed to load Stripe products:', error);
+      }
+    };
+
+    loadStripeProducts();
+  }, []);
+
   // Helper function to get the associated product for a mushroom
   const getAssociatedProduct = (mushroomId: string): Product | null => {
     return products.find(product => product.mushroom_id === mushroomId) || null;
+  };
+
+  // Helper function to get Stripe product data for a mushroom
+  const getStripeProductForMushroom = (mushroomId: string) => {
+    return stripeProducts.find(sp => sp.metadata.mushroom_id === mushroomId);
   };
 
   // Helper function to get effects for a mushroom
@@ -501,59 +523,66 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <div className="p-4">
           <h2 className="font-inter font-semibold text-white mb-4">Your Supplements</h2>
           <div className="space-y-3">
-            {cartItems.map((item) => (
-              <motion.div 
-                key={item.product.id} 
-                className="flex items-center gap-3 bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors"
-                onClick={() => console.log('Navigate to product:', item.product.name)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <img
-                  src={getAssociatedProduct(item.product.id)?.image || item.product.image}
-                  alt={getAssociatedProduct(item.product.id)?.name || item.product.name}
-                  className="w-12 h-12 rounded-lg object-cover"
-                />
-                
-                <div className="flex-1">
-                  <h3 className="font-inter font-semibold text-white text-sm">{getAssociatedProduct(item.product.id)?.name || item.product.name}</h3>
-                  <p className="text-vibrant-orange font-opensans font-semibold text-sm">${item.product.price}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <motion.button
-                    onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                    className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Minus className="w-3 h-3" />
-                  </motion.button>
-                  
-                  <span className="w-6 text-center font-opensans font-semibold text-white text-sm">
-                    {item.quantity}
-                  </span>
-                  
-                  <motion.button
-                    onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                    className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Plus className="w-3 h-3" />
-                  </motion.button>
-                </div>
-
-                <motion.button
-                  onClick={() => onRemoveItem(item.product.id)}
-                  className="p-1 rounded-full hover:bg-red-500/20 text-red-400"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+            {cartItems.map((item) => {
+              const stripeProduct = getStripeProductForMushroom(item.product.id);
+              const displayName = stripeProduct?.name || item.product.name;
+              const displayPrice = stripeProduct?.price || item.product.price;
+              const displayImage = stripeProduct?.image || item.product.image;
+              
+              return (
+                <motion.div 
+                  key={item.product.id} 
+                  className="flex items-center gap-3 bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors"
+                  onClick={() => console.log('Navigate to product:', displayName)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </motion.button>
-              </motion.div>
-            ))}
+                  <img
+                    src={displayImage}
+                    alt={displayName}
+                    className="w-12 h-12 rounded-lg object-cover"
+                  />
+                  
+                  <div className="flex-1">
+                    <h3 className="font-inter font-semibold text-white text-sm">{displayName}</h3>
+                    <p className="text-vibrant-orange font-opensans font-semibold text-sm">${displayPrice}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                      className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Minus className="w-3 h-3" />
+                    </motion.button>
+                    
+                    <span className="w-6 text-center font-opensans font-semibold text-white text-sm">
+                      {item.quantity}
+                    </span>
+                    
+                    <motion.button
+                      onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                      className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </motion.button>
+                  </div>
+
+                  <motion.button
+                    onClick={() => onRemoveItem(item.product.id)}
+                    className="p-1 rounded-full hover:bg-red-500/20 text-red-400"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </motion.button>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
