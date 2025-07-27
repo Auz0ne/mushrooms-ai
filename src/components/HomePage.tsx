@@ -192,11 +192,22 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="flex gap-4 mb-3">
               {/* Video/Image - Left Side */}
               <div className="w-24 h-24 flex-shrink-0">
-                <img
-                  src={selectedProductForPresentation.image}
-                  alt={selectedProductForPresentation.name}
-                  className="w-full h-full object-cover rounded-xl"
-                />
+                {selectedProductForPresentation.video ? (
+                  <video
+                    src={selectedProductForPresentation.video}
+                    className="w-full h-full object-cover rounded-xl"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={selectedProductForPresentation.image}
+                    alt={selectedProductForPresentation.name}
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                )}
               </div>
 
               {/* Name and Description - Right Side */}
@@ -241,19 +252,15 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Description - Full Width */}
             <div className="mb-4">
-              {(() => {
-              const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
-                return (
-                  <p className="text-white/90 font-opensans text-sm leading-relaxed">
-                  {selectedProductForPresentation.description}
-                  </p>
-                );
-              })()}
+              <p className="text-white/90 font-opensans text-sm leading-relaxed">
+                {selectedProductForPresentation.description}
+              </p>
             </div>
 
             {/* Database Information */}
             {(() => {
-              const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
+              const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === selectedProductForPresentation.id);
+              const mushroom = mushroomProduct?.mushroom;
               if (!mushroom) return null;
 
               return (
@@ -263,12 +270,13 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Effects by Category */}
             {(() => {
-              const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
+              const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === selectedProductForPresentation.id);
+              const mushroom = mushroomProduct?.mushroom;
               if (!mushroom || !mushroom.expected_effects) return null;
 
               const categorizedEffects = new Map<string, { category: any, effects: string[] }>();
               
-              mushroom.expected_effects.forEach(effect => {
+              mushroom.expected_effects.forEach((effect: string) => {
                 const category = getCategoryForEffect(effect);
                 if (category) {
                   const key = category.name;

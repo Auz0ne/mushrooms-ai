@@ -55,7 +55,11 @@ export const useMushroomProducts = () => {
   // Get display product (prefer product over mushroom)
   const getDisplayProduct = (mushroomProduct: MushroomProduct): Product => {
     if (mushroomProduct.product) {
-      return mushroomProduct.product;
+      // Use product data but include video from mushroom
+      return {
+        ...mushroomProduct.product,
+        video: mushroomProduct.mushroom.video_url || undefined,
+      };
     }
 
     // Fallback to mushroom data if no product exists
@@ -65,6 +69,7 @@ export const useMushroomProducts = () => {
       name: mushroom.name,
       price: 29.99, // Default price
       image: mushroom.photo_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
+      video: mushroom.video_url || undefined,
       description: mushroom.story_behind_consumption || 'Premium mushroom supplement',
       benefits: mushroom.expected_effects || [],
       tags: mushroom.expected_effects?.slice(0, 3) || ['Natural', 'Organic'],
