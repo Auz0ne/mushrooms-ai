@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { CartItem } from '../types';
+import { CartItem, Product } from '../types';
 
 interface PromotionProps {
   cartItems: CartItem[];
   onAddProducts: (productNames: string[]) => void;
+  products: Product[];
 }
 
 interface ArchetypeData {
@@ -68,7 +69,7 @@ const archetypes: ArchetypeData[] = [
   }
 ];
 
-export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts }) => {
+export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, products }) => {
   const cartMushroomNames = cartItems.map(item => item.product.name);
   
   // Find the most relevant archetype to suggest
@@ -112,8 +113,20 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts }
   }
 
   const { archetype, missingProducts } = suggestion;
-  const productPrice = 29.99; // Default price per product
-  const totalAdditionalCost = missingProducts.length * productPrice;
+  
+  // Helper function to get product price by name
+  const getProductPrice = (productName: string): number => {
+    const product = products.find(p => 
+      p.name.toLowerCase().includes(productName.toLowerCase()) ||
+      productName.toLowerCase().includes(p.name.toLowerCase())
+    );
+    return product ? product.price : 29.99; // Default fallback
+  };
+  
+  // Calculate total cost using actual product prices
+  const totalAdditionalCost = missingProducts.reduce((total, productName) => {
+    return total + getProductPrice(productName);
+  }, 0);
   
   const formatProductList = (products: string[]) => {
     if (products.length === 1) {
@@ -175,7 +188,7 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts }
             <div key={index} className="flex items-center justify-between bg-white/5 rounded-lg p-2">
               <span className="text-white font-opensans text-sm">{product}</span>
               <span className="text-vibrant-orange font-opensans font-semibold text-sm">
-                ${productPrice.toFixed(2)}
+                ${getProductPrice(product).toFixed(2)}
               </span>
             </div>
           ))}

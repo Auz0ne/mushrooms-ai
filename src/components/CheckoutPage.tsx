@@ -479,6 +479,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <Promotion 
           cartItems={cartItems}
           onAddProducts={handleAddProducts}
+          products={products}
         />
 
         {/* Shopping List */}
