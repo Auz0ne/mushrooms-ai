@@ -56,8 +56,11 @@ export const useMushroomProducts = () => {
   const getDisplayProduct = (mushroomProduct: MushroomProduct): Product => {
     if (mushroomProduct.product) {
       // Use product data but include video from mushroom
+      // If product doesn't have image_url, fall back to mushroom photo_url
+      const productImage = mushroomProduct.product.image || mushroomProduct.mushroom.photo_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`;
       return {
         ...mushroomProduct.product,
+        image: productImage,
         video: mushroomProduct.mushroom.video_url || undefined,
       };
     }

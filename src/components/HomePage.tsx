@@ -518,6 +518,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 >
                 {/* Product Video/Image */}
                 <div className="w-full h-full relative">
+                  {(() => { console.log('Current product image:', currentProduct.image, 'Video:', currentProduct.video); return null; })()}
                   {currentProduct.video ? (
                     <video
                       src={currentProduct.video}
