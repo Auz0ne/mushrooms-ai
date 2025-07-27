@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Minus, Trash2, CreditCard, ShoppingCart, Sparkles, X, 
 import { CartItem } from '../types';
 import { getCategoryForEffect } from '../utils/categoryIcons';
 import { Promotion } from './Promotion';
+import { ProductPage } from './ProductPage';
 
 interface CheckoutPageProps {
   cartItems: CartItem[];
@@ -103,6 +104,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [isChatTyping, setIsChatTyping] = useState(false);
   const [selectedEffect, setSelectedEffect] = useState<string>('');
   const aiAssistantRef = useRef<HTMLDivElement>(null);
+  const [showProductPage, setShowProductPage] = useState(false);
+  const [selectedProductForPage, setSelectedProductForPage] = useState<any>(null);
 
   const [completedArchetypes, setCompletedArchetypes] = useState<string[]>([]);
 
@@ -469,7 +472,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               <motion.div 
                 key={item.product.id} 
                 className="flex items-center gap-3 bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors"
-                onClick={() => console.log('Navigate to product:', item.product.name)}
+                onClick={() => {
+                  setSelectedProductForPage(item.product);
+                  setShowProductPage(true);
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -649,6 +655,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           Complete Purchase - ${finalTotal.toFixed(2)}
         </motion.button>
       </div>
+
+      {/* Product Page Modal */}
+      <ProductPage
+        product={selectedProductForPage}
+        isOpen={showProductPage}
+        onClose={() => {
+          setShowProductPage(false);
+          setSelectedProductForPage(null);
+        }}
+        onAddToCart={onAddToCart}
+        onAskAI={(question: string) => {
+          setSelectedEffect(question);
+          setShowChatbot(true);
+          setShowProductPage(false);
+          setSelectedProductForPage(null);
+        }}
+      />
     </div>
   );
 };

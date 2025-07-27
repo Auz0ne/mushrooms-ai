@@ -827,6 +827,8 @@ export const HomePage: React.FC<HomePageProps> = ({
           </motion.button>
         </form>
       </div>
+
+
     </div>
   );
 };
