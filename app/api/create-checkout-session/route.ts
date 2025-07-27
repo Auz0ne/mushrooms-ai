@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '../../../src/lib/stripe';
+import { StripeProductService } from '../../../src/services/stripeProductService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,19 +13,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create line items for Stripe
-    const lineItems = cartItems.map((item: any) => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: item.product.name,
-          description: item.product.description,
-          images: [item.product.image],
-        },
-        unit_amount: Math.round(item.product.price * 100), // Convert to cents
-      },
-      quantity: item.quantity,
-    }));
+    // Get Stripe products and create line items
+    const stripeProducts = await StripeProductService.getAllProducts();
+    
+    const lineItems = cartItems.map((item: any) => {
+      // Find matching Stripe product by name
+      const stripeProduct = stripeProducts.find(sp => 
+        sp.name.toLowerCase().includes(item.product.name.toLowerCase()) ||
+        item.product.name.toLowerCase().includes(sp.name.toLowerCase())
+      );
+
+      if (stripeProduct) {
+        // Use existing Stripe product
+        return {
+          price: stripeProduct.priceId,
+          quantity: item.quantity,
+        };
+      } else {
+        // Fallback to dynamic pricing
+        return {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.product.name,
+              description: item.product.description,
+              images: [item.product.image],
+            },
+            unit_amount: Math.round(item.product.price * 100), // Convert to cents
+          },
+          quantity: item.quantity,
+        };
+      }
+    });
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
