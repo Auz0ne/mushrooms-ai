@@ -33,6 +33,7 @@ export interface DatabaseProduct {
   certifications_notes: string;
   price: number;
   mushroom_id: string | null;
+  image_url: string | null;
   created_at: string;
 }
 

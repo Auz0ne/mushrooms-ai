@@ -71,6 +71,30 @@ export class ProductService {
   }
 
   /**
+   * Get the first product for a mushroom (for display purposes)
+   */
+  static async getProductByMushroomId(mushroomId: string): Promise<Product | null> {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('mushroom_id', mushroomId)
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error fetching product by mushroom:', error);
+        return null;
+      }
+
+      return data ? this.convertToProduct(data) : null;
+    } catch (error) {
+      console.error('Error in getProductByMushroomId:', error);
+      return null;
+    }
+  }
+
+  /**
    * Search products by name or description
    */
   static async searchProducts(query: string): Promise<Product[]> {
@@ -124,7 +148,7 @@ export class ProductService {
       id: dbProduct.id,
       name: dbProduct.name,
       price: dbProduct.price,
-      image: `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`, // Default image
+      image: dbProduct.image_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`, // Use product image or fallback
       description: dbProduct.short_description,
       benefits: dbProduct.key_benefits,
       tags: ['Organic', 'Premium'], // Default tags

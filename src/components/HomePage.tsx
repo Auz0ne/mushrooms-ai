@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Send, Bot, User, ChevronLeft, ChevronRight, Info, ShoppingCart } from 'lucide-react';
 import { Product, Mushroom } from '../types';
-import { MushroomService } from '../services/mushroomService';
+import { useMushroomProducts } from '../hooks/useMushroomProducts';
 import { useChat } from '../hooks/useChat';
 import { getCategoriesForMushroom, getCategoryForEffect } from '../utils/categoryIcons';
 
@@ -17,8 +17,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   onGoToCheckout,
   cartItemsCount,
 }) => {
-  const [mushrooms, setMushrooms] = useState<Mushroom[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [isDeployed, setIsDeployed] = useState(false);
@@ -27,45 +25,30 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showComposition, setShowComposition] = useState(false);
   const { messages, isTyping, isStreaming, sendMessage } = useChat();
   
+  const { 
+    mushroomProducts, 
+    loading, 
+    error, 
+    getDisplayProducts, 
+    getDisplayProductByIndex,
+    getMushroomProductByIndex,
+    getDisplayProduct
+  } = useMushroomProducts();
+
+  // Set Reishi as default when data loads
   useEffect(() => {
-    const loadMushrooms = async () => {
-      try {
-        const data = await MushroomService.getAllMushrooms();
-        setMushrooms(data);
-        
-        // Set Reishi as the default selected mushroom
-        const reishiIndex = data.findIndex(mushroom => 
-          mushroom.name.toLowerCase().includes('reishi')
-        );
-        if (reishiIndex !== -1) {
-          setCurrentProductIndex(reishiIndex);
-        }
-      } catch (error) {
-        console.error('Failed to load mushrooms:', error);
-      } finally {
-        setLoading(false);
+    if (mushroomProducts.length > 0) {
+      const reishiIndex = mushroomProducts.findIndex(mp => 
+        mp.mushroom.name.toLowerCase().includes('reishi')
+      );
+      if (reishiIndex !== -1) {
+        setCurrentProductIndex(reishiIndex);
       }
-    };
+    }
+  }, [mushroomProducts]);
 
-    loadMushrooms();
-  }, []);
-
-  // Convert mushroom to product format for display
-  const convertMushroomToProduct = (mushroom: Mushroom): Product => ({
-    id: mushroom.id,
-    name: mushroom.name,
-    price: 29.99, // Default price since not in database
-    image: mushroom.photo_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
-    video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
-    description: mushroom.story_behind_consumption || 'Premium mushroom supplement',
-    benefits: mushroom.expected_effects || [],
-    tags: mushroom.expected_effects?.slice(0, 3) || ['Natural', 'Organic'],
-    category: 'supplement',
-    inStock: true,
-  });
-
-  const products = mushrooms.map(convertMushroomToProduct);
-  const currentProduct = products[currentProductIndex];
+  const products = getDisplayProducts();
+  const currentProduct = getDisplayProductByIndex(currentProductIndex);
 
   const handlePrevious = () => {
     setCurrentProductIndex(prev => 
@@ -87,8 +70,11 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   const handleMushroomSuggestion = (mushroom: Mushroom) => {
-    const product = convertMushroomToProduct(mushroom);
-    handleProductSuggestion(product);
+    const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === mushroom.id);
+    if (mushroomProduct) {
+      const product = getDisplayProduct(mushroomProduct);
+      handleProductSuggestion(product);
+    }
   };
 
   const handleProductTap = (product: Product) => {
@@ -106,7 +92,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     const question = `Tell me more about ${effect} and how it can benefit me`;
     const context = {
       cartItems: [],
-      currentProduct: currentProduct,
+      currentProduct: currentProduct || undefined,
     };
     sendMessage(question, context, handleMushroomSuggestion);
     setIsDeployed(true); // Deploy chatbot when asking AI
@@ -117,7 +103,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     if (inputValue.trim()) {
       const context = {
         cartItems: [],
-        currentProduct: currentProduct,
+        currentProduct: currentProduct || undefined,
       };
       sendMessage(inputValue.trim(), context, handleMushroomSuggestion);
       setInputValue('');
@@ -206,22 +192,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="flex gap-4 mb-3">
               {/* Video/Image - Left Side */}
               <div className="w-24 h-24 flex-shrink-0">
-                {selectedProductForPresentation.video ? (
-                  <video
-                    src={selectedProductForPresentation.video}
-                    className="w-full h-full object-cover rounded-xl"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  />
-                ) : (
-                  <img
-                    src={selectedProductForPresentation.image}
-                    alt={selectedProductForPresentation.name}
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                )}
+                <img
+                  src={selectedProductForPresentation.image}
+                  alt={selectedProductForPresentation.name}
+                  className="w-full h-full object-cover rounded-xl"
+                />
               </div>
 
               {/* Name and Description - Right Side */}
@@ -242,7 +217,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 
                 {(() => {
-                  const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
+                  const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === selectedProductForPresentation.id);
+                  const mushroom = mushroomProduct?.mushroom;
                   return (
                     <div className="space-y-2">
                       {mushroom?.scientific_name && (
