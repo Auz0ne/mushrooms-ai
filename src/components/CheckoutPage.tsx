@@ -122,6 +122,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     loadProducts();
   }, []);
 
+  // Helper function to get the associated product for a mushroom
+  const getAssociatedProduct = (mushroomId: string): Product | null => {
+    return products.find(product => product.mushroom_id === mushroomId) || null;
+  };
+
   // Helper function to get effects for a mushroom
   const getMushroomEffects = (mushroomName: string): string[] => {
     const name = mushroomName.toLowerCase();
@@ -489,13 +494,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 whileTap={{ scale: 0.98 }}
               >
                 <img
-                  src={item.product.image}
-                  alt={item.product.name}
+                  src={getAssociatedProduct(item.product.id)?.image || item.product.image}
+                  alt={getAssociatedProduct(item.product.id)?.name || item.product.name}
                   className="w-12 h-12 rounded-lg object-cover"
                 />
                 
                 <div className="flex-1">
-                  <h3 className="font-inter font-semibold text-white text-sm">{item.product.name}</h3>
+                  <h3 className="font-inter font-semibold text-white text-sm">{getAssociatedProduct(item.product.id)?.name || item.product.name}</h3>
                   <p className="text-vibrant-orange font-opensans font-semibold text-sm">${item.product.price}</p>
                 </div>
 
