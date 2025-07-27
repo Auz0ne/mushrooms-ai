@@ -550,39 +550,36 @@ export const HomePage: React.FC<HomePageProps> = ({
                       webkit-playsinline="true"
                       controls={false}
                       disablePictureInPicture
-                      poster={currentProduct.image}
-                      preload="auto"
+                      preload="metadata"
                       onLoadStart={() => {
                         console.log('Video loading started');
                       }}
                       onCanPlay={(e) => {
                         console.log('Video can play');
                         const video = e.currentTarget;
-                        // Force play with user interaction simulation
-                        const playPromise = video.play();
-                        if (playPromise !== undefined) {
-                          playPromise.catch(error => {
-                            console.log('Autoplay failed:', error);
-                            // If autoplay fails, ensure the poster is visible
-                            video.load();
-                          });
-                        }
-                      }}
-                      onLoadedData={(e) => {
-                        console.log('Video data loaded');
-                        const video = e.currentTarget;
-                        // Ensure video is ready and try to play
-                        if (video.readyState >= 3) {
+                        // Only try to play if not already playing
+                        if (video.paused) {
                           const playPromise = video.play();
                           if (playPromise !== undefined) {
                             playPromise.catch(error => {
-                              console.log('Autoplay failed on loaded data:', error);
+                              console.log('Autoplay failed:', error);
+                              // Show fallback image if autoplay fails
+                              const imageElement = video.parentElement?.querySelector('.fallback-image') as HTMLImageElement;
+                              if (imageElement) {
+                                video.style.display = 'none';
+                                imageElement.style.display = 'block';
+                              }
                             });
                           }
                         }
                       }}
-                      onPlay={() => {
+                      onPlay={(e) => {
                         console.log('Video started playing');
+                        // Hide fallback image when video starts playing
+                        const imageElement = e.currentTarget.parentElement?.querySelector('.fallback-image') as HTMLImageElement;
+                        if (imageElement) {
+                          imageElement.style.display = 'none';
+                        }
                       }}
                       onPause={() => {
                         console.log('Video paused');
@@ -609,10 +606,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                   {/* Fallback image using photo_url from database */}
                   {currentProduct.video && (
                     <img
-                      className="fallback-image w-full h-full object-cover rounded-2xl absolute inset-0 hidden"
+                      className="fallback-image w-full h-full object-cover rounded-2xl absolute inset-0"
                       src={currentProduct.image}
                       alt={currentProduct.name}
-                      style={{ display: 'none' }}
                     />
                   )}
                   
