@@ -408,11 +408,13 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="mb-4 w-full">
               <div className="flex flex-wrap justify-center gap-2">
                 {(() => {
-                  const mushroom = mushrooms.find(m => m.id === currentProduct.id);
+                  if (!currentProduct) return null;
+                  const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === currentProduct.id);
+                  const mushroom = mushroomProduct?.mushroom;
                   if (!mushroom) return null;
                   
                   const effects = mushroom.expected_effects || [];
-                  return effects.slice(0, 4).map((effect, index) => {
+                  return effects.slice(0, 4).map((effect: string, index: number) => {
                     const category = getCategoryForEffect(effect);
                     if (!category) return null;
                     
