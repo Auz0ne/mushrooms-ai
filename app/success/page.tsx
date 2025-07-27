@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, ArrowLeft, Package } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SuccessPage() {
+function SuccessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -89,5 +89,24 @@ export default function SuccessPage() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="space-y-4">
+            <div className="w-16 h-16 bg-vibrant-orange rounded-full flex items-center justify-center mx-auto">
+              <Package className="w-8 h-8 text-white" />
+            </div>
+            <p className="text-white font-opensans">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <SuccessPageContent />
+    </Suspense>
   );
 } 
