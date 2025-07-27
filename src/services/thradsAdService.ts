@@ -34,18 +34,9 @@ export class ThradsAdService {
     botResponse: string,
     conversationTurn: number
   ): Promise<ThradsAdResponse | null> {
-    if (!this.config.enabled) {
-      return null;
-    }
-
-    // Check if we're in a browser environment
-    if (typeof window === 'undefined') {
-      console.log('ThradsAdService: Not in browser environment, skipping ad request');
-      return null;
-    }
-
     try {
-      console.log('ThradsAdService: Requesting ad...');
+      console.log('Attempting to fetch ad from local API...');
+      
       const response = await fetch('/api/thrads-ad', {
         method: 'POST',
         headers: {
@@ -61,51 +52,17 @@ export class ThradsAdService {
       });
 
       if (!response.ok) {
-        console.error('Thrads API error:', response.status, response.statusText);
-        return {
-          status: 'error',
-          message: `API error: ${response.status}`,
-        };
+        console.error('Failed to fetch ad:', response.status, response.statusText);
+        return null;
       }
 
       const data = await response.json();
+      console.log('Ad response received:', data);
       
-      if (data.status === 'success' && data.data?.ad) {
-        return {
-          status: 'success',
-          data: {
-            ad: {
-              ...data.data.ad,
-              timestamp: new Date(data.data.ad.timestamp),
-            },
-            impressionId: data.data.impressionId,
-          },
-        };
-      }
-
-      // Handle cases where no ad is available
-      if (data.status === 'success' && !data.data) {
-        return {
-          status: 'success',
-          message: data.message || 'No ad available at this time',
-          data: undefined,
-        };
-      }
-
-      return {
-        status: 'error',
-        message: data.message || 'No ad available',
-      };
+      return data;
     } catch (error) {
-      console.error('Thrads ad service error:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-      return {
-        status: 'error',
-        message: 'Failed to fetch ad',
-      };
+      console.error('Error fetching sponsored message:', error);
+      return null;
     }
   }
 

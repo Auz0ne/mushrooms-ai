@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, chatId, userMessage, botResponse, conversationTurn } = body;
 
-    const apiKey = process.env.NEXT_PUBLIC_THRADS_API_KEY;
+    const apiKey = process.env.THRADS_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Thrads API key not configured' },
