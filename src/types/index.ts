@@ -22,6 +22,7 @@ export interface ChatMessage {
   sender: 'user' | 'bot';
   timestamp: Date;
   productSuggestion?: Product;
+  mushroomSuggestion?: Mushroom;
 }
 
 export interface User {

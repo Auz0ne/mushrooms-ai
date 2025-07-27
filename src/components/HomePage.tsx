@@ -86,6 +86,11 @@ export const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
+  const handleMushroomSuggestion = (mushroom: Mushroom) => {
+    const product = convertMushroomToProduct(mushroom);
+    handleProductSuggestion(product);
+  };
+
   const handleProductTap = (product: Product) => {
     setSelectedProductForPresentation(product);
     setShowProductPresentation(true);
@@ -99,14 +104,14 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const handleAskAI = (effect: string) => {
     const question = `Tell me more about ${effect} and how it can benefit me`;
-    sendMessage(question, handleProductSuggestion);
+    sendMessage(question, handleMushroomSuggestion);
     setIsDeployed(true); // Deploy chatbot when asking AI
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      sendMessage(inputValue.trim(), handleProductSuggestion);
+      sendMessage(inputValue.trim(), handleMushroomSuggestion);
       setInputValue('');
     }
   };

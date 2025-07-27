@@ -16,7 +16,7 @@ A modern, AI-powered e-commerce application for premium mushroom supplements bui
 - **Frontend**: React 18, TypeScript, Tailwind CSS
 - **Animations**: Framer Motion
 - **Backend**: Supabase
-- **Build Tool**: Vite
+- **Build Tool**: Next.js
 - **Deployment**: Netlify
 
 ## Getting Started
@@ -43,8 +43,8 @@ npm install
 3. Set up environment variables:
 Create a `.env` file in the root directory:
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 4. Run the development server:

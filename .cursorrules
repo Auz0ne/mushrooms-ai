@@ -1,10 +1,10 @@
 # Mushroom AI E-commerce Project - Cursor Rules
 
 ## Project Overview
-This is a React TypeScript e-commerce application for mushroom supplements with AI chatbot functionality, built with Vite, Tailwind CSS, Framer Motion, and Supabase.
+This is a React TypeScript e-commerce application for mushroom supplements with AI chatbot functionality, built with Next.js, Tailwind CSS, Framer Motion, and Supabase.
 
 ## Technology Stack
-- **Frontend**: React 18, TypeScript, Vite
+- **Frontend**: React 18, TypeScript, Next.js
 - **Styling**: Tailwind CSS (with custom configuration)
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
@@ -150,12 +150,12 @@ export const Component: React.FC<ComponentProps> = ({
 ## Environment & Configuration
 
 ### Environment Variables
-- **Supabase**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- **Supabase**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - **Build**: Configure for Netlify deployment
-- **Development**: Use Vite dev server
+- **Development**: Use Next.js dev server
 
 ### Build & Deployment
-- **Vite Configuration**: Use React plugin and custom config
+- **Next.js Configuration**: Use custom next.config.js for static export
 - **Netlify**: Configure for SPA redirects
 - **TypeScript**: Use strict mode with custom config
 - **ESLint**: Use React hooks and refresh plugins

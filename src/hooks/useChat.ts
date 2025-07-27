@@ -35,7 +35,7 @@ export const useChat = () => {
           content: response.message,
           sender: 'bot',
           timestamp: new Date(),
-          productSuggestion: response.suggestedMushroom,
+          mushroomSuggestion: response.suggestedMushroom,
         };
 
         setMessages(prev => [...prev, botMessage]);
