@@ -445,6 +445,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div
                 className="relative bg-transparent rounded-2xl overflow-hidden w-72 h-72 mx-auto"
                 onTouchStart={(e) => {
+                  if (!currentProduct) return;
                   const startX = e.touches[0].clientX;
                   const startY = e.touches[0].clientY;
                   const startTime = Date.now();
@@ -482,7 +483,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       } else {
                         handlePrevious();
                       }
-                    } else if (!hasMoved && !isVerticalScroll && timeDiff < 500) {
+                    } else if (!hasMoved && !isVerticalScroll && timeDiff < 500 && currentProduct) {
                       // It's a tap (no movement and quick)
                       handleProductTap(currentProduct);
                     }
