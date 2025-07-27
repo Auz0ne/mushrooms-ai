@@ -50,6 +50,16 @@ export const HomePage: React.FC<HomePageProps> = ({
   const products = getDisplayProducts();
   const currentProduct = getDisplayProductByIndex(currentProductIndex);
 
+  if (!currentProduct) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-white text-lg">No product selected</p>
+        </div>
+      </div>
+    );
+  }
+
   const handlePrevious = () => {
     setCurrentProductIndex(prev => 
       prev > 0 ? prev - 1 : products.length - 1
