@@ -238,7 +238,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 
                 {(() => {
-                  const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === selectedProductForPresentation.id);
+                  const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === selectedProductForPresentation.id || mp.mushroom.id === selectedProductForPresentation.mushroom_id);
                   const mushroom = mushroomProduct?.mushroom;
                   return (
                     <div className="space-y-2">
@@ -269,7 +269,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Database Information */}
             {(() => {
-              const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === selectedProductForPresentation.id);
+              const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === selectedProductForPresentation.id || mp.mushroom.id === selectedProductForPresentation.mushroom_id);
               const mushroom = mushroomProduct?.mushroom;
               if (!mushroom) return null;
 
@@ -280,7 +280,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Effects by Category */}
             {(() => {
-              const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === selectedProductForPresentation.id);
+              const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === selectedProductForPresentation.id || mp.mushroom.id === selectedProductForPresentation.mushroom_id);
               const mushroom = mushroomProduct?.mushroom;
               if (!mushroom || !mushroom.expected_effects) return null;
 
