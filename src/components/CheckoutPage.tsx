@@ -140,23 +140,30 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       
       const newCompletedArchetypes: string[] = [];
       
+      // Helper function to check if any product contains the mushroom name
+      const hasMushroom = (mushroomName: string) => {
+        return Array.from(cartProductNames).some(productName => 
+          productName.includes(mushroomName.toLowerCase())
+        );
+      };
+      
       // Check each archetype
-      if (cartProductNames.has("lion's mane") && cartProductNames.has('cordyceps') && cartProductNames.has('reishi')) {
+      if (hasMushroom("lion's mane") && hasMushroom('cordyceps') && hasMushroom('reishi')) {
         newCompletedArchetypes.push('Mentalist');
       }
-      if (cartProductNames.has('reishi') && cartProductNames.has('turkey tail') && cartProductNames.has('chaga')) {
+      if (hasMushroom('reishi') && hasMushroom('turkey tail') && hasMushroom('chaga')) {
         newCompletedArchetypes.push('Guardian');
       }
-      if (cartProductNames.has('cordyceps') && cartProductNames.has('king trumpet') && cartProductNames.has('maitake')) {
+      if (hasMushroom('cordyceps') && hasMushroom('king trumpet') && hasMushroom('maitake')) {
         newCompletedArchetypes.push('Athlete');
       }
-      if (cartProductNames.has('tremella') && cartProductNames.has('chaga') && cartProductNames.has('shiitake')) {
+      if (hasMushroom('tremella') && hasMushroom('chaga') && hasMushroom('shiitake')) {
         newCompletedArchetypes.push('Radiant');
       }
-      if (cartProductNames.has('reishi') && cartProductNames.has('poria') && cartProductNames.has('maitake')) {
+      if (hasMushroom('reishi') && hasMushroom('poria') && hasMushroom('maitake')) {
         newCompletedArchetypes.push('Zen Seeker');
       }
-      if (cartProductNames.has('shiitake') && cartProductNames.has('turkey tail') && cartProductNames.has('enoki')) {
+      if (hasMushroom('shiitake') && hasMushroom('turkey tail') && hasMushroom('enoki')) {
         newCompletedArchetypes.push('Gut Guru');
       }
       
@@ -181,7 +188,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     "enoki": { id: 'enoki', name: 'Enoki', price: 25.99 },
   };
 
-  const handleAskAI = (effect: string, mushroomName: string) => {
+  const handleAskAI = (effect: string, productName: string) => {
     setSelectedEffect(effect);
     setShowChatbot(true);
     
@@ -194,7 +201,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }, 100);
     
     // Generate initial AI response about the effect
-    const initialMessage = generateEffectResponse(effect, mushroomName);
+    const initialMessage = generateEffectResponse(effect, productName);
     setChatMessages([{
       id: Date.now().toString(),
       content: initialMessage,
@@ -202,19 +209,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }]);
   };
 
-  const generateEffectResponse = (effect: string, mushroomName: string): string => {
+  const generateEffectResponse = (effect: string, productName: string): string => {
     const responses: Record<string, string> = {
-      'focus': `${mushroomName} enhances focus through its unique compounds called hericenones and erinacines, which stimulate nerve growth factor (NGF) production. This promotes the growth and maintenance of neurons, leading to improved cognitive function and sustained attention.`,
-      'memory': `${mushroomName} supports memory formation by promoting neuroplasticity - the brain's ability to form new neural connections. The bioactive compounds help protect existing neurons while encouraging the growth of new ones, particularly in areas crucial for memory processing.`,
-      'brain health': `${mushroomName} provides comprehensive brain health support through neuroprotective compounds that reduce inflammation, support myelin sheath repair, and enhance overall cognitive resilience against age-related decline.`,
-      'stress relief': `${mushroomName} acts as an adaptogen, helping your body manage stress more effectively by regulating cortisol levels and supporting the hypothalamic-pituitary-adrenal (HPA) axis. This leads to a calmer, more balanced stress response.`,
-      'immunity': `${mushroomName} contains powerful beta-glucans and other polysaccharides that modulate immune system function, enhancing your body's natural defense mechanisms while maintaining immune balance.`,
-      'energy': `${mushroomName} supports cellular energy production by improving oxygen utilization and ATP synthesis in mitochondria, leading to sustained energy without the crash associated with stimulants.`,
-      'stamina': `${mushroomName} enhances physical endurance by improving oxygen delivery to muscles and supporting efficient energy metabolism, allowing for better performance during physical activities.`,
-      'vitality': `${mushroomName} promotes overall vitality through its adaptogenic properties, supporting multiple body systems simultaneously for enhanced well-being and resilience.`
+      'focus': `${productName} enhances focus through its unique compounds called hericenones and erinacines, which stimulate nerve growth factor (NGF) production. This promotes the growth and maintenance of neurons, leading to improved cognitive function and sustained attention.`,
+      'memory': `${productName} supports memory formation by promoting neuroplasticity - the brain's ability to form new neural connections. The bioactive compounds help protect existing neurons while encouraging the growth of new ones, particularly in areas crucial for memory processing.`,
+      'brain health': `${productName} provides comprehensive brain health support through neuroprotective compounds that reduce inflammation, support myelin sheath repair, and enhance overall cognitive resilience against age-related decline.`,
+      'stress relief': `${productName} acts as an adaptogen, helping your body manage stress more effectively by regulating cortisol levels and supporting the hypothalamic-pituitary-adrenal (HPA) axis. This leads to a calmer, more balanced stress response.`,
+      'immunity': `${productName} contains powerful beta-glucans and other polysaccharides that modulate immune system function, enhancing your body's natural defense mechanisms while maintaining immune balance.`,
+      'energy': `${productName} supports cellular energy production by improving oxygen utilization and ATP synthesis in mitochondria, leading to sustained energy without the crash associated with stimulants.`,
+      'stamina': `${productName} enhances physical endurance by improving oxygen delivery to muscles and supporting efficient energy metabolism, allowing for better performance during physical activities.`,
+      'vitality': `${productName} promotes overall vitality through its adaptogenic properties, supporting multiple body systems simultaneously for enhanced well-being and resilience.`
     };
     
-    return responses[effect.toLowerCase()] || `${mushroomName} provides ${effect} benefits through its unique bioactive compounds that work synergistically with your body's natural processes.`;
+    return responses[effect.toLowerCase()] || `${productName} provides ${effect} benefits through its unique bioactive compounds that work synergistically with your body's natural processes.`;
   };
 
   const handleSendChatMessage = () => {
@@ -263,8 +270,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     // Calculate scores from cart items
     cartItems.forEach(item => {
-      const mushroomName = item.product.name;
-      const effects = getMushroomEffects(mushroomName);
+      // Use product key_benefits if available, otherwise fallback to mushroom effects
+      const effects = item.product.key_benefits || getMushroomEffects(item.product.name);
       
       effects.forEach(effect => {
         const category = getCategoryForEffect(effect);
@@ -403,19 +410,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     </div>
                   </div>
                   
-                  {/* Effects from mushrooms in this category */}
+                  {/* Effects from products in this category */}
                   <div className="ml-8 space-y-2 mt-3">
                     {(() => {
-                      const effectsInCategory: { effect: string; mushroomName: string }[] = [];
+                      const effectsInCategory: { effect: string; productName: string }[] = [];
                       
                       cartItems.forEach(item => {
-                        const mushroomName = item.product.name;
-                        const effects = getMushroomEffects(mushroomName);
+                        // Use product key_benefits if available, otherwise fallback to mushroom effects
+                        const effects = item.product.key_benefits || getMushroomEffects(item.product.name);
 
                         effects.forEach(effect => {
                           const effectCategory = getCategoryForEffect(effect);
                           if (effectCategory && effectCategory.name === category.name) {
-                            effectsInCategory.push({ effect, mushroomName: item.product.name });
+                            effectsInCategory.push({ effect, productName: item.product.name });
                           }
                         });
                       });
@@ -427,11 +434,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               {item.effect}
                             </span>
                             <span className="text-white/60 font-opensans text-xs bg-white/5 px-2 py-1 rounded-full">
-                              from {item.mushroomName}
+                              from {item.productName}
                             </span>
                           </div>
                           <motion.button
-                            onClick={() => handleAskAI(item.effect, item.mushroomName)}
+                            onClick={() => handleAskAI(item.effect, item.productName)}
                             className="px-3 py-1 bg-vibrant-orange/80 hover:bg-vibrant-orange text-white text-xs font-opensans font-medium rounded-full"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
