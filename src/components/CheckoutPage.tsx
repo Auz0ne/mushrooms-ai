@@ -362,7 +362,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       await StripeService.createCheckoutSession({
         cartItems,
         successUrl: `${window.location.origin}/success`,
-        cancelUrl: `${window.location.origin}/checkout`,
+        cancelUrl: `${window.location.origin}/`,
       });
     } catch (error: any) {
       console.error('Payment error:', error);

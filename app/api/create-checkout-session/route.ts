@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       line_items: lineItems,
       mode: 'payment',
       success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/checkout`,
+      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/`,
       metadata: {
         cartItems: JSON.stringify(cartItems.map((item: any) => ({
           id: item.product.id,
