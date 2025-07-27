@@ -68,7 +68,7 @@ export class ThradsAdService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'thrads-api-key': apiKey,
         },
         body: JSON.stringify(payload),
       });
@@ -83,22 +83,32 @@ export class ThradsAdService {
 
       const data = await response.json();
       
-      if (data.status === 'success' && data.data?.ad) {
+      if (data.status === 'success' && data.data?.creative) {
         return {
           status: 'success',
           data: {
             ad: {
-              id: data.data.ad.id || `ad_${Date.now()}`,
-              content: data.data.ad.content,
-              title: data.data.ad.title,
-              image: data.data.ad.image,
-              url: data.data.ad.url,
-              cta: data.data.ad.cta,
+              id: `ad_${Date.now()}`,
+              content: data.data.creative.creative,
+              title: data.data.prod_name || 'Sponsored Content',
+              image: data.data.img_url || '',
+              url: data.data.prod_url || '',
+              cta: 'Learn More',
               sponsored: true,
               timestamp: new Date(),
+              impressionId: data.requestId,
             },
-            impressionId: data.data.impressionId,
+            impressionId: data.requestId,
           },
+        };
+      }
+
+      // Handle cases where no ad is available (too soon, offset not reached, etc.)
+      if (data.status === 'success' && (!data.data || Object.keys(data.data).length === 0)) {
+        return {
+          status: 'success',
+          message: data.message || 'No ad available at this time',
+          data: undefined,
         };
       }
 

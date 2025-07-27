@@ -68,7 +68,7 @@ export const useChat = () => {
         setIsTyping(false);
         setIsStreaming(false);
 
-        // Check if we should show an ad
+        // Check if we should show an ad (every 3 messages)
         const updatedMessages = messages.concat([
           userMessage,
           { ...tempBotMessage, content: fullResponse }
@@ -104,6 +104,9 @@ export const useChat = () => {
                   timestamp: new Date(),
                 });
               }
+            } else if (adResponse?.status === 'success' && !adResponse.data) {
+              // Ad request successful but no ad available (too soon, etc.)
+              console.log('No ad available:', adResponse.message);
             }
           } catch (error) {
             console.error('Failed to fetch ad:', error);
