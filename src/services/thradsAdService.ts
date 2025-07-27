@@ -8,9 +8,6 @@ export interface AdServiceConfig {
 }
 
 export class ThradsAdService {
-  private static readonly API_BASE_URL = 'https://dev.thrads.ai/api/v1';
-  private static readonly PROD_API_BASE_URL = 'https://api.thrads.ai/api/v1';
-  
   private static config: AdServiceConfig = {
     enabled: true,
     frequency: 3, // Show ad every 3 messages
@@ -25,15 +22,10 @@ export class ThradsAdService {
     this.config = { ...this.config, ...config };
   }
 
-  /**
-   * Get the appropriate API base URL based on environment
-   */
-  private static getApiBaseUrl(): string {
-    return this.config.sandboxMode ? this.API_BASE_URL : this.PROD_API_BASE_URL;
-  }
+
 
   /**
-   * Request a sponsored message from Thrads
+   * Request a sponsored message from Thrads via our API route
    */
   static async getSponsoredMessage(
     userId: string,
@@ -46,31 +38,17 @@ export class ThradsAdService {
     }
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_THRADS_API_KEY;
-      if (!apiKey) {
-        console.warn('Thrads API key not configured');
-        return null;
-      }
-
-      const payload: ThradsAdRequest = {
-        userId,
-        chatId,
-        content: {
-          user: userMessage,
-          chatbot: botResponse,
-        },
-        conversationOffset: 0, // Can be made configurable
-        adFrequencyLimit: this.config.frequency,
-        userRegion: this.config.userRegion,
-      };
-
-      const response = await fetch(`${this.getApiBaseUrl()}/message/get-ad/`, {
+      const response = await fetch('/api/thrads-ad', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'thrads-api-key': apiKey,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          userId,
+          chatId,
+          userMessage,
+          botResponse,
+        }),
       });
 
       if (!response.ok) {
@@ -83,28 +61,21 @@ export class ThradsAdService {
 
       const data = await response.json();
       
-      if (data.status === 'success' && data.data?.creative) {
+      if (data.status === 'success' && data.data?.ad) {
         return {
           status: 'success',
           data: {
             ad: {
-              id: `ad_${Date.now()}`,
-              content: data.data.creative.creative,
-              title: data.data.prod_name || 'Sponsored Content',
-              image: data.data.img_url || '',
-              url: data.data.prod_url || '',
-              cta: 'Learn More',
-              sponsored: true,
-              timestamp: new Date(),
-              impressionId: data.requestId,
+              ...data.data.ad,
+              timestamp: new Date(data.data.ad.timestamp),
             },
-            impressionId: data.requestId,
+            impressionId: data.data.impressionId,
           },
         };
       }
 
-      // Handle cases where no ad is available (too soon, offset not reached, etc.)
-      if (data.status === 'success' && (!data.data || Object.keys(data.data).length === 0)) {
+      // Handle cases where no ad is available
+      if (data.status === 'success' && !data.data) {
         return {
           status: 'success',
           message: data.message || 'No ad available at this time',

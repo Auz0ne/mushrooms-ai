@@ -217,14 +217,17 @@ ThradsAdService.configure({
 # Test the API directly
 curl -X POST https://dev.thrads.ai/api/v1/message/get-ad/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your_api_key" \
+  -H "thrads-api-key: your_api_key" \
   -d '{
     "userId": "test_user",
     "chatId": "test_chat",
     "content": {
       "user": "Hello",
       "chatbot": "Hi there!"
-    }
+    },
+    "conversationOffset": 3,
+    "adFrequencyLimit": 3,
+    "userRegion": "US"
   }'
 ```
 
