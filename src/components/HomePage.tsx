@@ -5,6 +5,7 @@ import { Product, Mushroom } from '../types';
 import { useMushroomProducts } from '../hooks/useMushroomProducts';
 import { useChat } from '../hooks/useChat';
 import { getCategoriesForMushroom, getCategoryForEffect } from '../utils/categoryIcons';
+import { MushroomPage } from './MushroomPage';
 
 interface HomePageProps {
   onAddToCart: (product: Product) => void;
@@ -23,6 +24,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showProductPresentation, setShowProductPresentation] = useState(false);
   const [selectedProductForPresentation, setSelectedProductForPresentation] = useState<Product | null>(null);
   const [showComposition, setShowComposition] = useState(false);
+  const [showMushroomPage, setShowMushroomPage] = useState(false);
+  const [selectedMushroomForPage, setSelectedMushroomForPage] = useState<Mushroom | null>(null);
   const { messages, isTyping, isStreaming, sendMessage } = useChat();
   
   const { 
@@ -88,8 +91,16 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   const handleProductTap = (product: Product) => {
-    setSelectedProductForPresentation(product);
-    setShowProductPresentation(true);
+    // Find the associated mushroom for this product
+    const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === product.id);
+    if (mushroomProduct) {
+      setSelectedMushroomForPage(mushroomProduct.mushroom);
+      setShowMushroomPage(true);
+    } else {
+      // Fallback to product presentation if no mushroom found
+      setSelectedProductForPresentation(product);
+      setShowProductPresentation(true);
+    }
   };
 
   const handleBackToProducts = () => {
@@ -828,7 +839,36 @@ export const HomePage: React.FC<HomePageProps> = ({
         </form>
       </div>
 
-
+      {/* Mushroom Page Modal */}
+      <MushroomPage
+        mushroom={selectedMushroomForPage}
+        associatedProduct={selectedMushroomForPage ? mushroomProducts.find(mp => mp.mushroom.id === selectedMushroomForPage.id)?.product || null : null}
+        isOpen={showMushroomPage}
+        onClose={() => {
+          setShowMushroomPage(false);
+          setSelectedMushroomForPage(null);
+        }}
+        onAddToCart={onAddToCart}
+        onAskAI={(question: string) => {
+          const context = {
+            cartItems: [],
+            currentProduct: selectedMushroomForPage ? {
+              id: selectedMushroomForPage.id,
+              name: selectedMushroomForPage.name,
+              price: 29.99, // Default price
+              image: selectedMushroomForPage.photo_url || '',
+              description: selectedMushroomForPage.story_behind_consumption || '',
+              benefits: selectedMushroomForPage.expected_effects || [],
+              tags: selectedMushroomForPage.expected_effects?.slice(0, 3) || [],
+              category: 'supplement',
+              inStock: true,
+            } : undefined,
+          };
+          sendMessage(question, context, handleMushroomSuggestion);
+          setShowMushroomPage(false);
+          setSelectedMushroomForPage(null);
+        }}
+      />
     </div>
   );
 };
