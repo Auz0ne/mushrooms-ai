@@ -38,9 +38,12 @@ const SYSTEM_PROMPT = `You are an expert mushroom supplement advisor and salespe
 **Response Style:**
 - Conversational and friendly
 - Include emojis occasionally for warmth
-- Be concise but informative
+- Structure responses in clear paragraphs
+- Use line breaks to separate different points
+- Be concise and to-the-point (max 2-3 sentences per paragraph)
 - Always end with a question or call-to-action
 - Reference specific mushroom benefits and effects
+- Keep responses short and actionable
 
 Remember: You're helping people improve their wellness through premium mushroom supplements. Be their trusted advisor!`;
 
@@ -109,9 +112,11 @@ export async function POST(request: NextRequest) {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4.1-mini', // Updated to correct model name
       messages: openaiMessages,
-      max_tokens: 500,
+      max_tokens: 150, // Reduced from 500 to 150 for shorter responses
       temperature: 0.7,
       stream: false, // Set to true for streaming responses
+      presence_penalty: 0.1, // Slightly penalize repetition
+      frequency_penalty: 0.1, // Slightly penalize frequent tokens
     });
 
     const response = completion.choices[0]?.message?.content || 'I apologize, but I\'m having trouble responding right now. Please try again.';

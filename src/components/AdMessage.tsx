@@ -16,9 +16,14 @@ export const AdMessageComponent: React.FC<AdMessageProps> = ({
   onTrackClick,
 }) => {
   const handleClick = () => {
+    console.log('Ad clicked:', { adId: ad.id, url: ad.url, impressionId: ad.impressionId });
     onTrackClick(ad.id, ad.impressionId);
-    if (ad.url) {
+    if (ad.url && ad.url !== 'https://example.com/test-ad') {
+      console.log('Opening URL:', ad.url);
       window.open(ad.url, '_blank', 'noopener,noreferrer');
+    } else {
+      console.log('No valid URL available for this ad, showing alert instead');
+      alert('Ad clicked! This would normally open: ' + (ad.url || 'No URL'));
     }
   };
 

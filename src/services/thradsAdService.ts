@@ -10,7 +10,7 @@ export interface AdServiceConfig {
 export class ThradsAdService {
   private static config: AdServiceConfig = {
     enabled: true,
-    frequency: 3, // Show ad every 3 messages
+    frequency: 3, // Show ad every 3 messages (matching Thrads adFrequencyLimit)
     sandboxMode: process.env.NODE_ENV === 'development',
     userRegion: undefined,
   };
@@ -31,13 +31,21 @@ export class ThradsAdService {
     userId: string,
     chatId: string,
     userMessage: string,
-    botResponse: string
+    botResponse: string,
+    conversationTurn: number
   ): Promise<ThradsAdResponse | null> {
     if (!this.config.enabled) {
       return null;
     }
 
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      console.log('ThradsAdService: Not in browser environment, skipping ad request');
+      return null;
+    }
+
     try {
+      console.log('ThradsAdService: Requesting ad...');
       const response = await fetch('/api/thrads-ad', {
         method: 'POST',
         headers: {
@@ -48,6 +56,7 @@ export class ThradsAdService {
           chatId,
           userMessage,
           botResponse,
+          conversationTurn,
         }),
       });
 
@@ -89,6 +98,10 @@ export class ThradsAdService {
       };
     } catch (error) {
       console.error('Thrads ad service error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return {
         status: 'error',
         message: 'Failed to fetch ad',
@@ -147,7 +160,11 @@ export class ThradsAdService {
    */
   static shouldShowAd(messageCount: number): boolean {
     if (!this.config.enabled) return false;
-    return messageCount > 0 && messageCount % this.config.frequency === 0;
+    // Check if we should show ad (every N messages, starting from turn 3)
+    // Turn 3, 6, 9, etc. (every 3rd turn)
+    const shouldShow = messageCount >= 3 && messageCount % this.config.frequency === 0;
+    console.log(`Ad check: messageCount=${messageCount}, frequency=${this.config.frequency}, shouldShow=${shouldShow}`);
+    return shouldShow;
   }
 
   /**

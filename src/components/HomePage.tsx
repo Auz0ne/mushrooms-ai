@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Send, Bot, User, ChevronLeft, ChevronRight, Info, ShoppingCart } from 'lucide-react';
 import { Product, Mushroom } from '../types';
@@ -36,6 +36,15 @@ export const HomePage: React.FC<HomePageProps> = ({
     handleAdClick 
   } = useChat();
   
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -140,6 +149,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
+      if (!isDeployed) setIsDeployed(true); // Auto-deploy if minimized
       const context = {
         cartItems: [],
         currentProduct: currentProduct,
@@ -675,7 +685,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {/* Chatbot Section */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
+        className={`fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
           isDeployed ? 'h-70dvh' : 'h-[180px]'
         } transition-all duration-500 ease-out`}
         onTouchStart={(e) => {
@@ -774,8 +784,18 @@ export const HomePage: React.FC<HomePageProps> = ({
         </h3>
         
         {/* Chat Messages */}
-        <div className="messages-container flex-1 overflow-y-auto space-y-1.5 mb-2 mt-2 min-h-0" style={{ touchAction: 'pan-y' }}>
-          {messages.slice(-3).map((message) => {
+        <div
+          ref={messagesContainerRef}
+          className="messages-container flex-1 overflow-y-auto space-y-4 mb-2 mt-2 min-h-0"
+          style={{ touchAction: 'pan-y' }}
+        >
+          {(() => {
+            const displayMessages = messages.slice(-10);
+            console.log('Total messages:', messages.length);
+            console.log('Displaying messages:', displayMessages.map(m => ({ id: m.id, sender: m.sender, content: m.content.substring(0, 50) })));
+            console.log('Ad messages in display:', displayMessages.filter(m => m.sender === 'ad').length);
+            return displayMessages;
+          })().map((message) => {
             // Handle ad messages
             if (message.sender === 'ad' && message.adData) {
               return (
@@ -800,12 +820,33 @@ export const HomePage: React.FC<HomePageProps> = ({
                         {message.content}
                       </p>
                       {message.adData.cta && (
-                        <button
-                          onClick={() => handleAdClick(message.adData!.id, message.adData!.impressionId)}
-                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-opensans font-semibold py-1 px-3 rounded text-xs mt-2"
-                        >
-                          {message.adData.cta}
-                        </button>
+                        <div className="flex justify-end mt-2">
+                          <motion.button
+                            onClick={() => {
+                              console.log('Ad clicked:', { adId: message.adData!.id, url: message.adData!.url, impressionId: message.adData!.impressionId });
+                              handleAdClick(message.adData!.id, message.adData!.impressionId);
+                              if (message.adData!.url && message.adData!.url !== 'https://example.com/test-ad') {
+                                console.log('Opening URL:', message.adData!.url);
+                                window.open(message.adData!.url, '_blank', 'noopener,noreferrer');
+                              } else {
+                                console.log('No valid URL available for this ad, showing alert instead');
+                                alert('Ad clicked! This would normally open: ' + (message.adData!.url || 'No URL'));
+                              }
+                            }}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-opensans font-semibold py-1 px-3 rounded text-xs"
+                            whileHover={{ 
+                              scale: 1.05,
+                              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                              transition: { duration: 0.2 }
+                            }}
+                            whileTap={{ 
+                              scale: 0.95,
+                              transition: { duration: 0.1 }
+                            }}
+                          >
+                            {message.adData.cta}
+                          </motion.button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -823,43 +864,49 @@ export const HomePage: React.FC<HomePageProps> = ({
               >
                 {message.sender === 'bot' && (
                   <img 
-                    src="/Logo-Lyceum-Photoroom.png" 
+                    src="/Chatbot.png" 
                     alt="AI Assistant" 
-                    className="w-6 h-6 flex-shrink-0"
+                    className="w-8 h-8 flex-shrink-0"
                   />
                 )}
 
-                <div
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 ${
-                    message.sender === 'user'
-                      ? 'bg-vibrant-orange text-white'
-                      : 'bg-white/20 backdrop-blur-sm border border-white/30 text-white'
-                  }`}
-                >
-                  <p className="font-opensans text-xs leading-snug">
-                    {message.content}
-                  </p>
+                <div className="max-w-[80%]">
+                  <div className={`font-opensans text-xs leading-snug drop-shadow-sm ${
+                    message.sender === 'user' ? 'text-vibrant-orange font-semibold' : 'text-white'
+                  }`}>
+                    {message.sender === 'bot' ? (
+                      message.content.split('\n').map((paragraph, index) => (
+                        <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                          {paragraph}
+                        </p>
+                      ))
+                    ) : (
+                      <p>{message.content}</p>
+                    )}
+                  </div>
                 </div>
 
                 {message.sender === 'user' && (
-                  <div className="w-6 h-6 bg-dark-grey rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-3 h-3 text-white" />
-                  </div>
+                  <img 
+                    src="/User.png" 
+                    alt="User" 
+                    className="w-8 h-8 flex-shrink-0"
+                  />
                 )}
               </div>
             );
           })}
 
           {/* Typing Indicator */}
-          {isTyping && (
+          {isTyping && !isStreaming && (
             <div className="flex gap-3 justify-start">
               <img 
-                src="/Logo-Lyceum-Photoroom.png" 
+                src="/Chatbot.png" 
                 alt="AI Assistant" 
                 className="w-6 h-6 flex-shrink-0"
               />
-              <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl px-3 py-2">
-                <div className="flex gap-1">
+              <div className="max-w-[80%]">
+                <div className="flex gap-1 drop-shadow-sm">
                   <div className="w-1 h-1 bg-white rounded-full animate-bounce" />
                   <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                   <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
@@ -867,6 +914,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Text Input */}

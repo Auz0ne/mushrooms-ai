@@ -17,6 +17,7 @@ export const useChat = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [chatId] = useState(() => `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [userId] = useState(() => `user_${Math.random().toString(36).substr(2, 9)}`);
+  const [conversationTurn, setConversationTurn] = useState(0);
 
   const sendMessage = useCallback((
     content: string, 
@@ -74,16 +75,27 @@ export const useChat = () => {
           { ...tempBotMessage, content: fullResponse }
         ]);
         
-        if (ThradsAdService.shouldShowAd(updatedMessages.length)) {
-          try {
-            const adResponse = await ThradsAdService.getSponsoredMessage(
-              userId,
-              chatId,
-              content,
-              fullResponse
-            );
+        // Increment conversation turn (each user-bot exchange is one turn)
+        const newTurn = conversationTurn + 1;
+        setConversationTurn(newTurn);
+        
+        console.log('Checking if should show ad. Message count:', updatedMessages.length, 'Turn:', newTurn);
+        if (ThradsAdService.shouldShowAd(newTurn)) {
+          console.log('Should show ad! Fetching...');
+          // Use setTimeout to ensure this runs after the current execution cycle
+          setTimeout(async () => {
+            try {
+              console.log('Attempting to fetch ad...');
+              const adResponse = await ThradsAdService.getSponsoredMessage(
+                userId,
+                chatId,
+                content,
+                fullResponse,
+                newTurn
+              );
 
-            if (adResponse?.status === 'success' && adResponse.data?.ad) {
+                          if (adResponse?.status === 'success' && adResponse.data?.ad) {
+              console.log('Adding ad to messages:', adResponse.data.ad);
               const adMessage: ChatMessage = {
                 id: `ad_${Date.now()}`,
                 content: adResponse.data.ad.content,
@@ -92,25 +104,31 @@ export const useChat = () => {
                 adData: adResponse.data.ad,
               };
 
-              setMessages(prev => [...prev, adMessage]);
+              setMessages(prev => {
+                console.log('Current messages before adding ad:', prev.length);
+                const newMessages = [...prev, adMessage];
+                console.log('Messages after adding ad:', newMessages.length);
+                return newMessages;
+              });
 
-              // Log impression
-              if (adResponse.data.impressionId) {
-                await ThradsAdService.logImpression({
-                  user_id: userId,
-                  chat_id: chatId,
-                  ad_id: adResponse.data.ad.id,
-                  impression_id: adResponse.data.impressionId,
-                  timestamp: new Date(),
-                });
+                // Log impression
+                if (adResponse.data.impressionId) {
+                  await ThradsAdService.logImpression({
+                    user_id: userId,
+                    chat_id: chatId,
+                    ad_id: adResponse.data.ad.id,
+                    impression_id: adResponse.data.impressionId,
+                    timestamp: new Date(),
+                  });
+                }
+              } else if (adResponse?.status === 'success' && !adResponse.data) {
+                // Ad request successful but no ad available (too soon, etc.)
+                console.log('No ad available:', adResponse.message);
               }
-            } else if (adResponse?.status === 'success' && !adResponse.data) {
-              // Ad request successful but no ad available (too soon, etc.)
-              console.log('No ad available:', adResponse.message);
+            } catch (error) {
+              console.error('Failed to fetch ad:', error);
             }
-          } catch (error) {
-            console.error('Failed to fetch ad:', error);
-          }
+          }, 100); // Small delay to ensure browser context
         }
       },
       (error: string) => {
