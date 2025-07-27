@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Minus, Trash2, CreditCard, ShoppingCart, Sparkles, X, 
 import { CartItem, Product } from '../types';
 import { getCategoryForEffect } from '../utils/categoryIcons';
 import { ProductService } from '../services/productService';
+import { StripeService } from '../services/stripeService';
 import { Promotion } from './Promotion';
 
 interface CheckoutPageProps {
@@ -355,6 +356,20 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     // The useEffect will automatically detect completed archetypes
   };
 
+  // Stripe payment handler
+  const handleStripePayment = async () => {
+    try {
+      await StripeService.createCheckoutSession({
+        cartItems,
+        successUrl: `${window.location.origin}/success`,
+        cancelUrl: `${window.location.origin}/checkout`,
+      });
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      alert('Payment failed: ' + error.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black relative">
       {/* Header */}
@@ -661,7 +676,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       {/* Fixed Checkout Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-dark-matte/95 backdrop-blur-sm border-t border-white/20">
         <motion.button
-          onClick={onPay}
+          onClick={handleStripePayment}
           className="w-full bg-vibrant-orange hover:bg-orange-600 text-white font-opensans font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-vibrant-orange focus:ring-offset-2"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
