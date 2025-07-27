@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
-import { ChatMessage, Mushroom, Product, CartItem } from '../types';
+import { useState, useCallback, useEffect } from 'react';
+import { ChatMessage, Mushroom, Product, CartItem, AdMessage } from '../types';
 import { ChatGPTService, ChatContext } from '../services/chatGPTService';
+import { ThradsAdService } from '../services/thradsAdService';
 
 export const useChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -14,6 +15,8 @@ export const useChat = () => {
 
   const [isTyping, setIsTyping] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [chatId] = useState(() => `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [userId] = useState(() => `user_${Math.random().toString(36).substr(2, 9)}`);
 
   const sendMessage = useCallback((
     content: string, 
@@ -55,7 +58,7 @@ export const useChat = () => {
             : msg
         ));
       },
-      (fullResponse: string) => {
+      async (fullResponse: string) => {
         // Finalize the message
         setMessages(prev => prev.map(msg => 
           msg.id === tempBotMessage.id 
@@ -64,6 +67,48 @@ export const useChat = () => {
         ));
         setIsTyping(false);
         setIsStreaming(false);
+
+        // Check if we should show an ad
+        const updatedMessages = messages.concat([
+          userMessage,
+          { ...tempBotMessage, content: fullResponse }
+        ]);
+        
+        if (ThradsAdService.shouldShowAd(updatedMessages.length)) {
+          try {
+            const adResponse = await ThradsAdService.getSponsoredMessage(
+              userId,
+              chatId,
+              content,
+              fullResponse
+            );
+
+            if (adResponse?.status === 'success' && adResponse.data?.ad) {
+              const adMessage: ChatMessage = {
+                id: `ad_${Date.now()}`,
+                content: adResponse.data.ad.content,
+                sender: 'ad',
+                timestamp: new Date(),
+                adData: adResponse.data.ad,
+              };
+
+              setMessages(prev => [...prev, adMessage]);
+
+              // Log impression
+              if (adResponse.data.impressionId) {
+                await ThradsAdService.logImpression({
+                  user_id: userId,
+                  chat_id: chatId,
+                  ad_id: adResponse.data.ad.id,
+                  impression_id: adResponse.data.impressionId,
+                  timestamp: new Date(),
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Failed to fetch ad:', error);
+          }
+        }
       },
       (error: string) => {
         // Handle error
@@ -76,7 +121,7 @@ export const useChat = () => {
         setIsStreaming(false);
       }
     );
-  }, [messages]);
+  }, [messages, chatId, userId]);
 
   const clearChat = useCallback(() => {
     setMessages([{
@@ -87,11 +132,25 @@ export const useChat = () => {
     }]);
   }, []);
 
+  const handleAdDismiss = useCallback((adId: string) => {
+    setMessages(prev => prev.filter(msg => msg.id !== adId));
+  }, []);
+
+  const handleAdClick = useCallback(async (adId: string, impressionId?: string) => {
+    if (impressionId) {
+      await ThradsAdService.trackClick(impressionId, adId);
+    }
+  }, []);
+
   return {
     messages,
     isTyping,
     isStreaming,
     sendMessage,
     clearChat,
+    handleAdDismiss,
+    handleAdClick,
+    chatId,
+    userId,
   };
 };

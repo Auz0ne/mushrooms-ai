@@ -46,10 +46,12 @@ export interface CartItem {
 export interface ChatMessage {
   id: string;
   content: string;
-  sender: 'user' | 'bot';
+  sender: 'user' | 'bot' | 'ad';
   timestamp: Date;
   productSuggestion?: Product;
   mushroomSuggestion?: Mushroom;
+  // Ad-specific fields
+  adData?: AdMessage;
 }
 
 export interface User {
@@ -79,4 +81,49 @@ export interface Archetype {
   user_objective: string;
   archetype: string;
   created_at: string;
+}
+
+// Thrads Ad Integration Types
+export interface AdMessage {
+  id: string;
+  content: string;
+  title?: string;
+  image?: string;
+  url?: string;
+  cta?: string;
+  sponsored: boolean;
+  timestamp: Date;
+  impressionId?: string;
+}
+
+export interface ThradsAdRequest {
+  userId: string;
+  chatId: string;
+  content: {
+    user: string;
+    chatbot: string;
+  };
+  conversationOffset?: number;
+  adFrequencyLimit?: number;
+  userRegion?: string;
+}
+
+export interface ThradsAdResponse {
+  status: 'success' | 'error';
+  message?: string;
+  data?: {
+    ad: AdMessage;
+    impressionId?: string;
+  };
+}
+
+export interface AdImpression {
+  id: string;
+  user_id: string;
+  chat_id: string;
+  ad_id: string;
+  impression_id?: string;
+  timestamp: Date;
+  clicked?: boolean;
+  dismissed?: boolean;
 }

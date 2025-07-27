@@ -27,7 +27,14 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showProductPresentation, setShowProductPresentation] = useState(false);
   const [selectedProductForPresentation, setSelectedProductForPresentation] = useState<Product | null>(null);
   const [showComposition, setShowComposition] = useState(false);
-  const { messages, isTyping, isStreaming, sendMessage } = useChat();
+  const { 
+    messages, 
+    isTyping, 
+    isStreaming, 
+    sendMessage, 
+    handleAdDismiss, 
+    handleAdClick 
+  } = useChat();
   
   useEffect(() => {
     const loadData = async () => {
@@ -768,40 +775,80 @@ export const HomePage: React.FC<HomePageProps> = ({
         
         {/* Chat Messages */}
         <div className="messages-container flex-1 overflow-y-auto space-y-1.5 mb-2 mt-2 min-h-0" style={{ touchAction: 'pan-y' }}>
-          {messages.slice(-3).map((message) => (
-            <div
-              key={message.id}
-              className={`flex gap-3 ${
-                message.sender === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
-              {message.sender === 'bot' && (
-                <img 
-                  src="/Logo-Lyceum-Photoroom.png" 
-                  alt="AI Assistant" 
-                  className="w-6 h-6 flex-shrink-0"
-                />
-              )}
+          {messages.slice(-3).map((message) => {
+            // Handle ad messages
+            if (message.sender === 'ad' && message.adData) {
+              return (
+                <div key={message.id} className="flex gap-3 justify-start">
+                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="max-w-[80%] rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-3 relative">
+                    <div className="absolute -top-2 left-3 bg-purple-500 text-white text-xs px-2 py-1 rounded-full">
+                      Sponsored
+                    </div>
+                    <div className="mt-2">
+                      {message.adData.title && (
+                        <h4 className="font-inter font-semibold text-dark-matte text-xs mb-1">
+                          {message.adData.title}
+                        </h4>
+                      )}
+                      <p className="font-opensans text-xs text-dark-matte leading-snug">
+                        {message.content}
+                      </p>
+                      {message.adData.cta && (
+                        <button
+                          onClick={() => handleAdClick(message.adData!.id, message.adData!.impressionId)}
+                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-opensans font-semibold py-1 px-3 rounded text-xs mt-2"
+                        >
+                          {message.adData.cta}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
 
+            // Handle regular messages
+            return (
               <div
-                className={`max-w-[80%] rounded-2xl px-3 py-2 ${
-                  message.sender === 'user'
-                    ? 'bg-vibrant-orange text-white'
-                    : 'bg-white/20 backdrop-blur-sm border border-white/30 text-white'
+                key={message.id}
+                className={`flex gap-3 ${
+                  message.sender === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
-                <p className="font-opensans text-xs leading-snug">
-                  {message.content}
-                </p>
-              </div>
+                {message.sender === 'bot' && (
+                  <img 
+                    src="/Logo-Lyceum-Photoroom.png" 
+                    alt="AI Assistant" 
+                    className="w-6 h-6 flex-shrink-0"
+                  />
+                )}
 
-              {message.sender === 'user' && (
-                <div className="w-6 h-6 bg-dark-grey rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-3 h-3 text-white" />
+                <div
+                  className={`max-w-[80%] rounded-2xl px-3 py-2 ${
+                    message.sender === 'user'
+                      ? 'bg-vibrant-orange text-white'
+                      : 'bg-white/20 backdrop-blur-sm border border-white/30 text-white'
+                  }`}
+                >
+                  <p className="font-opensans text-xs leading-snug">
+                    {message.content}
+                  </p>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {message.sender === 'user' && (
+                  <div className="w-6 h-6 bg-dark-grey rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {/* Typing Indicator */}
           {isTyping && (
