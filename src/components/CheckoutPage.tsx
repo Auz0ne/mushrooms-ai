@@ -106,6 +106,31 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const [completedArchetypes, setCompletedArchetypes] = useState<string[]>([]);
 
+  // Helper function to get effects for a mushroom
+  const getMushroomEffects = (mushroomName: string): string[] => {
+    const name = mushroomName.toLowerCase();
+    if (name.includes('reishi')) {
+      return ['immunity', 'stress relief', 'sleep'];
+    } else if (name.includes("lion's mane")) {
+      return ['focus', 'memory', 'brain health'];
+    } else if (name.includes('cordyceps')) {
+      return ['energy', 'stamina', 'vitality'];
+    } else if (name.includes('chaga')) {
+      return ['immunity', 'anti-inflammatory'];
+    } else if (name.includes('turkey tail')) {
+      return ['immunity', 'gut health'];
+    } else if (name.includes('maitake')) {
+      return ['metabolic health', 'immunity'];
+    } else if (name.includes('shiitake')) {
+      return ['immunity', 'cardiovascular health'];
+    } else if (name.includes('oyster')) {
+      return ['cholesterol', 'anti-inflammatory'];
+    } else {
+      // Default effects for any other mushroom
+      return ['wellness', 'anti-inflammatory'];
+    }
+  };
+
   // Check for completed archetypes whenever cart changes
   useEffect(() => {
     const checkCompletedArchetypes = () => {
@@ -238,22 +263,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     // Calculate scores from cart items
     cartItems.forEach(item => {
-      const mushroomName = item.product.name.toLowerCase();
-      let effects: string[] = [];
-
-      // Map mushroom names to their effects (simplified)
-      if (mushroomName.includes('reishi')) {
-        effects = ['immunity', 'stress relief', 'sleep'];
-      } else if (mushroomName.includes("lion's mane")) {
-        effects = ['focus', 'memory', 'brain health'];
-      } else if (mushroomName.includes('cordyceps')) {
-        effects = ['energy', 'stamina', 'vitality'];
-      } else if (mushroomName.includes('chaga')) {
-        effects = ['immunity', 'anti-inflammatory'];
-      } else if (mushroomName.includes('turkey tail')) {
-        effects = ['immunity', 'gut health'];
-      }
-
+      const mushroomName = item.product.name;
+      const effects = getMushroomEffects(mushroomName);
+      
       effects.forEach(effect => {
         const category = getCategoryForEffect(effect);
         if (category && categoryMap.has(category.name)) {
@@ -263,14 +275,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       });
     });
 
-    setCategoryScores(
-      Array.from(categoryMap.entries()).map(([name, data]) => ({
-        name,
-        icon: data.icon,
-        score: data.score,
-        maxScore: data.maxScore,
-      })).filter(cat => cat.score > 0)
-    );
+    const calculatedScores = Array.from(categoryMap.entries()).map(([name, data]) => ({
+      name,
+      icon: data.icon,
+      score: data.score,
+      maxScore: data.maxScore,
+    })).filter(cat => cat.score > 0);
+    
+    setCategoryScores(calculatedScores);
 
   }, [cartItems]);
 
@@ -397,21 +409,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       const effectsInCategory: { effect: string; mushroomName: string }[] = [];
                       
                       cartItems.forEach(item => {
-                        const mushroomName = item.product.name.toLowerCase();
-                        let effects: string[] = [];
-
-                        // Map mushroom names to their effects
-                        if (mushroomName.includes('reishi')) {
-                          effects = ['immunity', 'stress relief', 'sleep'];
-                        } else if (mushroomName.includes("lion's mane")) {
-                          effects = ['focus', 'memory', 'brain health'];
-                        } else if (mushroomName.includes('cordyceps')) {
-                          effects = ['energy', 'stamina', 'vitality'];
-                        } else if (mushroomName.includes('chaga')) {
-                          effects = ['immunity', 'anti-inflammatory'];
-                        } else if (mushroomName.includes('turkey tail')) {
-                          effects = ['immunity', 'gut health'];
-                        }
+                        const mushroomName = item.product.name;
+                        const effects = getMushroomEffects(mushroomName);
 
                         effects.forEach(effect => {
                           const effectCategory = getCategoryForEffect(effect);
