@@ -25,7 +25,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showProductPresentation, setShowProductPresentation] = useState(false);
   const [selectedProductForPresentation, setSelectedProductForPresentation] = useState<Product | null>(null);
   const [showComposition, setShowComposition] = useState(false);
-  const { messages, isTyping, sendMessage } = useChat();
+  const { messages, isTyping, isStreaming, sendMessage } = useChat();
   
   useEffect(() => {
     const loadMushrooms = async () => {
@@ -104,14 +104,22 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const handleAskAI = (effect: string) => {
     const question = `Tell me more about ${effect} and how it can benefit me`;
-    sendMessage(question, handleMushroomSuggestion);
+    const context = {
+      cartItems: [],
+      currentProduct: currentProduct,
+    };
+    sendMessage(question, context, handleMushroomSuggestion);
     setIsDeployed(true); // Deploy chatbot when asking AI
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      sendMessage(inputValue.trim(), handleMushroomSuggestion);
+      const context = {
+        cartItems: [],
+        currentProduct: currentProduct,
+      };
+      sendMessage(inputValue.trim(), context, handleMushroomSuggestion);
       setInputValue('');
     }
   };

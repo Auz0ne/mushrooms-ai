@@ -1,21 +1,25 @@
 import { useState, useCallback } from 'react';
-import { ChatMessage, Mushroom } from '../types';
-import { ChatBot } from '../utils/chatbot';
+import { ChatMessage, Mushroom, Product, CartItem } from '../types';
+import { ChatGPTService, ChatContext } from '../services/chatGPTService';
 
 export const useChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      content: "Hi there! 👋 I'm your mushroom supplement guide. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?",
+      content: "Hi there! 👋 I'm your AI mushroom supplement advisor. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?",
       sender: 'bot',
       timestamp: new Date(),
     }
   ]);
 
   const [isTyping, setIsTyping] = useState(false);
-  const chatBot = new ChatBot();
+  const [isStreaming, setIsStreaming] = useState(false);
 
-  const sendMessage = useCallback((content: string, onMushroomSuggestion?: (mushroom: Mushroom) => void) => {
+  const sendMessage = useCallback((
+    content: string, 
+    context: ChatContext = { cartItems: [] },
+    onMushroomSuggestion?: (mushroom: Mushroom) => void
+  ) => {
     // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -27,42 +31,57 @@ export const useChat = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
 
-    // Simulate typing delay
-    setTimeout(() => {
-      chatBot.generateResponse(content).then(response => {
-        const botMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: response.message,
-          sender: 'bot',
-          timestamp: new Date(),
-          mushroomSuggestion: response.suggestedMushroom,
-        };
+    // Add a temporary bot message for streaming
+    const tempBotMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      content: '',
+      sender: 'bot',
+      timestamp: new Date(),
+    };
 
-        setMessages(prev => [...prev, botMessage]);
-        setIsTyping(false);
+    setMessages(prev => [...prev, tempBotMessage]);
+    setIsStreaming(true);
 
-        // Trigger mushroom suggestion callback
-        if (response.suggestedMushroom && onMushroomSuggestion) {
-          onMushroomSuggestion(response.suggestedMushroom);
-        }
-      }).catch(error => {
-        console.error('Error generating response:', error);
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
-          sender: 'bot',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMessage]);
+    // Use ChatGPT service
+    ChatGPTService.generateStreamingResponse(
+      content,
+      messages,
+      context,
+      (chunk: string) => {
+        // Update the temporary message with streaming content
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempBotMessage.id 
+            ? { ...msg, content: chunk }
+            : msg
+        ));
+      },
+      (fullResponse: string) => {
+        // Finalize the message
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempBotMessage.id 
+            ? { ...msg, content: fullResponse }
+            : msg
+        ));
         setIsTyping(false);
-      });
-    }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
-  }, [chatBot]);
+        setIsStreaming(false);
+      },
+      (error: string) => {
+        // Handle error
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempBotMessage.id 
+            ? { ...msg, content: error }
+            : msg
+        ));
+        setIsTyping(false);
+        setIsStreaming(false);
+      }
+    );
+  }, [messages]);
 
   const clearChat = useCallback(() => {
     setMessages([{
       id: '1',
-      content: "Hi there! 👋 I'm your mushroom supplement guide. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?",
+      content: "Hi there! 👋 I'm your AI mushroom supplement advisor. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?",
       sender: 'bot',
       timestamp: new Date(),
     }]);
@@ -71,6 +90,7 @@ export const useChat = () => {
   return {
     messages,
     isTyping,
+    isStreaming,
     sendMessage,
     clearChat,
   };
