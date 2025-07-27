@@ -124,7 +124,7 @@ export class ProductService {
       id: dbProduct.id,
       name: dbProduct.name,
       price: dbProduct.price,
-      image: `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`, // Default image
+      image: dbProduct.image || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`, // Use database image or fallback
       description: dbProduct.short_description,
       benefits: dbProduct.key_benefits,
       tags: ['Organic', 'Premium'], // Default tags
