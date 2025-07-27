@@ -1,0 +1,214 @@
+# Mushroom AI E-commerce Project - Cursor Rules
+
+## Project Overview
+This is a React TypeScript e-commerce application for mushroom supplements with AI chatbot functionality, built with Vite, Tailwind CSS, Framer Motion, and Supabase.
+
+## Technology Stack
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS (with custom configuration)
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Backend**: Supabase (PostgreSQL)
+- **Deployment**: Netlify
+- **Notifications**: React Hot Toast
+
+## Project Structure & Conventions
+
+### File Organization
+```
+src/
+├── components/
+│   ├── ui/           # Reusable UI components (Button, Card)
+│   ├── product/      # Product-related components
+│   ├── chat/         # Chatbot components
+│   ├── checkout/     # Checkout components
+│   └── [feature]/    # Feature-specific components
+├── hooks/            # Custom React hooks
+├── services/         # API and external service integrations
+├── types/            # TypeScript type definitions
+├── utils/            # Utility functions and helpers
+└── lib/              # Third-party library configurations
+```
+
+### Component Architecture
+- **Functional Components**: Use React functional components with TypeScript
+- **Props Interface**: Always define TypeScript interfaces for component props
+- **Custom Hooks**: Extract reusable logic into custom hooks
+- **Component Extraction**: Break down large components into smaller, focused ones
+- **Single Responsibility**: Each component should have one clear purpose
+
+### Naming Conventions
+- **Components**: PascalCase (e.g., `ProductDisplay`, `ChatInterface`)
+- **Files**: PascalCase for components, camelCase for utilities
+- **Hooks**: camelCase with 'use' prefix (e.g., `useCart`, `useChat`)
+- **Types/Interfaces**: PascalCase (e.g., `Product`, `CartItem`)
+- **Constants**: UPPER_SNAKE_CASE for global constants
+
+## Coding Standards
+
+### TypeScript
+- **Strict Mode**: Always use TypeScript strict mode
+- **Type Definitions**: Define interfaces for all data structures
+- **Props Typing**: Always type component props with interfaces
+- **Generic Types**: Use generics for reusable components
+- **Type Safety**: Avoid `any` type, use proper typing
+
+### React Patterns
+- **Hooks First**: Use hooks for state management and side effects
+- **Event Handlers**: Use camelCase for event handler names
+- **State Management**: Use `useState` and `useEffect` appropriately
+- **Props Destructuring**: Destructure props in function parameters
+- **Conditional Rendering**: Use ternary operators or logical AND
+
+### Styling (Tailwind CSS)
+- **Custom Colors**: Use project-specific colors (`vibrant-orange`, `dark-matte`, etc.)
+- **Responsive Design**: Mobile-first approach with responsive utilities
+- **Glass Morphism**: Use backdrop-blur and transparency effects
+- **Animations**: Use Framer Motion for complex animations
+- **Custom Classes**: Define custom classes in `tailwind.config.js`
+
+### Component Structure
+```typescript
+import React from 'react';
+import { motion } from 'framer-motion';
+import { LucideIcon } from 'lucide-react';
+
+interface ComponentProps {
+  // Define all props with types
+}
+
+export const Component: React.FC<ComponentProps> = ({
+  // Destructure props
+}) => {
+  // Hooks and state
+  // Event handlers
+  // Render JSX
+};
+```
+
+## Business Logic Rules
+
+### E-commerce Features
+- **Cart Management**: Use `useCart` hook for cart operations
+- **Product Display**: Convert mushrooms from database to Product format
+- **Archetype System**: Implement discount logic based on product combinations
+- **Category Scoring**: Calculate wellness profile based on product effects
+
+### AI Chatbot
+- **Keyword Matching**: Use keyword-based responses for mushroom recommendations
+- **Effect Categorization**: Map effects to categories using `categoryIcons.ts`
+- **Typing Indicators**: Show typing animation during AI responses
+- **Drag Interface**: Implement drag-to-deploy for chatbot
+
+### Database Integration
+- **Supabase Client**: Use configured client from `lib/supabase.ts`
+- **Row Level Security**: Respect RLS policies on mushrooms table
+- **Error Handling**: Always handle async operations with try-catch
+- **Loading States**: Show loading indicators during data fetching
+
+## UI/UX Guidelines
+
+### Design System
+- **Color Palette**: Use defined colors from Tailwind config
+- **Typography**: Inter for headings, Open Sans for body text
+- **Spacing**: Use consistent spacing scale
+- **Border Radius**: Use rounded-xl for cards, rounded-full for buttons
+- **Shadows**: Use subtle shadows for depth
+
+### Animation Guidelines
+- **Framer Motion**: Use for complex animations and transitions
+- **Hover Effects**: Scale and color transitions on interactive elements
+- **Page Transitions**: Smooth transitions between pages
+- **Loading States**: Animated loading indicators
+
+### Mobile-First Design
+- **Touch Interactions**: Optimize for touch gestures
+- **Swipe Navigation**: Implement swipe for product navigation
+- **Responsive Layout**: Ensure all components work on mobile
+- **Viewport Units**: Use `dvh` for dynamic viewport height
+
+## Development Workflow
+
+### Code Organization
+1. **Component Extraction**: Break large components into smaller ones
+2. **Folder Structure**: Organize by feature, not type
+3. **Import Organization**: Group imports (React, third-party, local)
+4. **Export Patterns**: Use named exports for components
+
+### Performance Considerations
+- **Lazy Loading**: Use React.lazy for code splitting
+- **Memoization**: Use React.memo for expensive components
+- **Image Optimization**: Use appropriate image formats and sizes
+- **Bundle Size**: Keep dependencies minimal
+
+### Error Handling
+- **Try-Catch**: Wrap async operations in try-catch blocks
+- **User Feedback**: Show toast notifications for user actions
+- **Fallback UI**: Provide fallbacks for failed operations
+- **Console Logging**: Use console.log for debugging
+
+## Environment & Configuration
+
+### Environment Variables
+- **Supabase**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- **Build**: Configure for Netlify deployment
+- **Development**: Use Vite dev server
+
+### Build & Deployment
+- **Vite Configuration**: Use React plugin and custom config
+- **Netlify**: Configure for SPA redirects
+- **TypeScript**: Use strict mode with custom config
+- **ESLint**: Use React hooks and refresh plugins
+
+## Special Notes
+
+### Mushroom Data Structure
+- **Database Schema**: Follow Supabase mushrooms table structure
+- **Product Conversion**: Convert Mushroom to Product format for display
+- **Effect Mapping**: Use `categoryIcons.ts` for effect categorization
+- **Image Handling**: Use photo_url from database with fallbacks
+
+### AI Integration
+- **ChatBot Class**: Use utility class for AI responses
+- **Keyword Matching**: Implement in `chatbot.ts`
+- **Response Generation**: Create contextual responses based on effects
+- **User Experience**: Provide helpful, educational responses
+
+### E-commerce Logic
+- **Cart Persistence**: Use localStorage through useCart hook
+- **Price Calculation**: Handle discounts and totals
+- **Product Navigation**: Implement swipe and tap interactions
+- **Checkout Flow**: Smooth transition between pages
+
+## Common Patterns
+
+### Component Props
+```typescript
+interface ComponentProps {
+  onAction: (param: Type) => void;
+  data: DataType[];
+  isLoading?: boolean;
+  className?: string;
+}
+```
+
+### Event Handlers
+```typescript
+const handleAction = (param: Type) => {
+  // Handle the action
+  onAction(param);
+};
+```
+
+### State Management
+```typescript
+const [state, setState] = useState<StateType>(initialValue);
+const { data, loading, error } = useCustomHook();
+```
+
+### Styling Patterns
+```typescript
+className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4"
+```
+
+This project follows modern React patterns with a focus on maintainability, type safety, and user experience. Always prioritize code clarity and component reusability. 
