@@ -27,6 +27,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showProductPresentation, setShowProductPresentation] = useState(false);
   const [selectedProductForPresentation, setSelectedProductForPresentation] = useState<Product | null>(null);
   const [showComposition, setShowComposition] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const { 
     messages, 
     isTyping, 
@@ -72,6 +74,36 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
 
     loadData();
+  }, []);
+
+  // Mobile keyboard handling
+  useEffect(() => {
+    // Detect if we're on mobile
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    
+    // Handle visual viewport changes (keyboard appearance)
+    const handleViewportChange = () => {
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        const keyboardHeight = window.innerHeight - window.visualViewport.height;
+        setKeyboardHeight(Math.max(0, keyboardHeight));
+      }
+    };
+    
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      handleViewportChange(); // Initial check
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      }
+    };
   }, []);
 
   // Find the product associated with the current mushroom (for price only)
@@ -685,9 +717,12 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {/* Chatbot Section */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
+        className={`fixed left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
           isDeployed ? 'h-70dvh' : 'h-[180px]'
         } transition-all duration-500 ease-out`}
+        style={{
+          bottom: isMobile && keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'
+        }}
         onTouchStart={(e) => {
           // Only handle drag if not touching the scrollable messages area
           const target = e.target as HTMLElement;
@@ -923,6 +958,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            onFocus={() => {
+              if (!isDeployed) {
+                setIsDeployed(true);
+              }
+            }}
             placeholder="Ask about supplements..."
             className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-3 py-1.5 text-white placeholder-white/70 font-opensans text-sm focus:outline-none focus:ring-2 focus:ring-vibrant-orange"
             disabled={isTyping}
