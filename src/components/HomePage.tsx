@@ -64,10 +64,28 @@ export const HomePage: React.FC<HomePageProps> = ({
     return associatedProduct ? associatedProduct.price : null;
   };
 
-  // Convert mushroom to product format for display (keep all mushroom data, only update price)
+  // Convert mushroom to product format for display (use associated product data)
   const convertMushroomToProduct = (mushroom: Mushroom): Product => {
     const productPrice = getProductPriceForMushroom(mushroom);
+    const associatedProduct = products.find(p => p.mushroom_id === mushroom.id);
     
+    if (associatedProduct) {
+      // Use associated product data
+      return {
+        id: mushroom.id,
+        name: associatedProduct.name, // Use product name
+        price: associatedProduct.price, // Use product price
+        image: associatedProduct.image, // Use product image
+        video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
+        description: associatedProduct.short_description || mushroom.story_behind_consumption || 'Premium mushroom supplement',
+        benefits: associatedProduct.key_benefits || mushroom.expected_effects || [],
+        tags: mushroom.expected_effects?.slice(0, 3) || ['Natural', 'Organic'],
+        category: 'supplement',
+        inStock: true,
+      };
+    }
+    
+    // Fallback to mushroom data if no associated product found
     return {
       id: mushroom.id,
       name: mushroom.name,
