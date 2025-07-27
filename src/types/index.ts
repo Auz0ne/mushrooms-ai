@@ -3,7 +3,6 @@ export interface Product {
   name: string;
   price: number;
   image: string;
-  video?: string;
   description: string;
   benefits: string[];
   tags: string[];
@@ -34,7 +33,6 @@ export interface DatabaseProduct {
   certifications_notes: string;
   price: number;
   mushroom_id: string | null;
-  image_url: string | null;
   created_at: string;
 }
 

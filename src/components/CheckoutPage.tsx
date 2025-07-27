@@ -4,7 +4,6 @@ import { ArrowLeft, Plus, Minus, Trash2, CreditCard, ShoppingCart, Sparkles, X, 
 import { CartItem } from '../types';
 import { getCategoryForEffect } from '../utils/categoryIcons';
 import { Promotion } from './Promotion';
-import { ProductPage } from './ProductPage';
 
 interface CheckoutPageProps {
   cartItems: CartItem[];
@@ -104,8 +103,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [isChatTyping, setIsChatTyping] = useState(false);
   const [selectedEffect, setSelectedEffect] = useState<string>('');
   const aiAssistantRef = useRef<HTMLDivElement>(null);
-  const [showProductPage, setShowProductPage] = useState(false);
-  const [selectedProductForPage, setSelectedProductForPage] = useState<any>(null);
 
   const [completedArchetypes, setCompletedArchetypes] = useState<string[]>([]);
 
@@ -143,30 +140,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       
       const newCompletedArchetypes: string[] = [];
       
-      // Helper function to check if any product contains the mushroom name
-      const hasMushroom = (mushroomName: string) => {
-        return Array.from(cartProductNames).some(productName => 
-          productName.includes(mushroomName.toLowerCase())
-        );
-      };
-      
       // Check each archetype
-      if (hasMushroom("lion's mane") && hasMushroom('cordyceps') && hasMushroom('reishi')) {
+      if (cartProductNames.has("lion's mane") && cartProductNames.has('cordyceps') && cartProductNames.has('reishi')) {
         newCompletedArchetypes.push('Mentalist');
       }
-      if (hasMushroom('reishi') && hasMushroom('turkey tail') && hasMushroom('chaga')) {
+      if (cartProductNames.has('reishi') && cartProductNames.has('turkey tail') && cartProductNames.has('chaga')) {
         newCompletedArchetypes.push('Guardian');
       }
-      if (hasMushroom('cordyceps') && hasMushroom('king trumpet') && hasMushroom('maitake')) {
+      if (cartProductNames.has('cordyceps') && cartProductNames.has('king trumpet') && cartProductNames.has('maitake')) {
         newCompletedArchetypes.push('Athlete');
       }
-      if (hasMushroom('tremella') && hasMushroom('chaga') && hasMushroom('shiitake')) {
+      if (cartProductNames.has('tremella') && cartProductNames.has('chaga') && cartProductNames.has('shiitake')) {
         newCompletedArchetypes.push('Radiant');
       }
-      if (hasMushroom('reishi') && hasMushroom('poria') && hasMushroom('maitake')) {
+      if (cartProductNames.has('reishi') && cartProductNames.has('poria') && cartProductNames.has('maitake')) {
         newCompletedArchetypes.push('Zen Seeker');
       }
-      if (hasMushroom('shiitake') && hasMushroom('turkey tail') && hasMushroom('enoki')) {
+      if (cartProductNames.has('shiitake') && cartProductNames.has('turkey tail') && cartProductNames.has('enoki')) {
         newCompletedArchetypes.push('Gut Guru');
       }
       
@@ -191,7 +181,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     "enoki": { id: 'enoki', name: 'Enoki', price: 25.99 },
   };
 
-  const handleAskAI = (effect: string, productName: string) => {
+  const handleAskAI = (effect: string, mushroomName: string) => {
     setSelectedEffect(effect);
     setShowChatbot(true);
     
@@ -204,7 +194,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }, 100);
     
     // Generate initial AI response about the effect
-    const initialMessage = generateEffectResponse(effect, productName);
+    const initialMessage = generateEffectResponse(effect, mushroomName);
     setChatMessages([{
       id: Date.now().toString(),
       content: initialMessage,
@@ -212,19 +202,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }]);
   };
 
-  const generateEffectResponse = (effect: string, productName: string): string => {
+  const generateEffectResponse = (effect: string, mushroomName: string): string => {
     const responses: Record<string, string> = {
-      'focus': `${productName} enhances focus through its unique compounds called hericenones and erinacines, which stimulate nerve growth factor (NGF) production. This promotes the growth and maintenance of neurons, leading to improved cognitive function and sustained attention.`,
-      'memory': `${productName} supports memory formation by promoting neuroplasticity - the brain's ability to form new neural connections. The bioactive compounds help protect existing neurons while encouraging the growth of new ones, particularly in areas crucial for memory processing.`,
-      'brain health': `${productName} provides comprehensive brain health support through neuroprotective compounds that reduce inflammation, support myelin sheath repair, and enhance overall cognitive resilience against age-related decline.`,
-      'stress relief': `${productName} acts as an adaptogen, helping your body manage stress more effectively by regulating cortisol levels and supporting the hypothalamic-pituitary-adrenal (HPA) axis. This leads to a calmer, more balanced stress response.`,
-      'immunity': `${productName} contains powerful beta-glucans and other polysaccharides that modulate immune system function, enhancing your body's natural defense mechanisms while maintaining immune balance.`,
-      'energy': `${productName} supports cellular energy production by improving oxygen utilization and ATP synthesis in mitochondria, leading to sustained energy without the crash associated with stimulants.`,
-      'stamina': `${productName} enhances physical endurance by improving oxygen delivery to muscles and supporting efficient energy metabolism, allowing for better performance during physical activities.`,
-      'vitality': `${productName} promotes overall vitality through its adaptogenic properties, supporting multiple body systems simultaneously for enhanced well-being and resilience.`
+      'focus': `${mushroomName} enhances focus through its unique compounds called hericenones and erinacines, which stimulate nerve growth factor (NGF) production. This promotes the growth and maintenance of neurons, leading to improved cognitive function and sustained attention.`,
+      'memory': `${mushroomName} supports memory formation by promoting neuroplasticity - the brain's ability to form new neural connections. The bioactive compounds help protect existing neurons while encouraging the growth of new ones, particularly in areas crucial for memory processing.`,
+      'brain health': `${mushroomName} provides comprehensive brain health support through neuroprotective compounds that reduce inflammation, support myelin sheath repair, and enhance overall cognitive resilience against age-related decline.`,
+      'stress relief': `${mushroomName} acts as an adaptogen, helping your body manage stress more effectively by regulating cortisol levels and supporting the hypothalamic-pituitary-adrenal (HPA) axis. This leads to a calmer, more balanced stress response.`,
+      'immunity': `${mushroomName} contains powerful beta-glucans and other polysaccharides that modulate immune system function, enhancing your body's natural defense mechanisms while maintaining immune balance.`,
+      'energy': `${mushroomName} supports cellular energy production by improving oxygen utilization and ATP synthesis in mitochondria, leading to sustained energy without the crash associated with stimulants.`,
+      'stamina': `${mushroomName} enhances physical endurance by improving oxygen delivery to muscles and supporting efficient energy metabolism, allowing for better performance during physical activities.`,
+      'vitality': `${mushroomName} promotes overall vitality through its adaptogenic properties, supporting multiple body systems simultaneously for enhanced well-being and resilience.`
     };
     
-    return responses[effect.toLowerCase()] || `${productName} provides ${effect} benefits through its unique bioactive compounds that work synergistically with your body's natural processes.`;
+    return responses[effect.toLowerCase()] || `${mushroomName} provides ${effect} benefits through its unique bioactive compounds that work synergistically with your body's natural processes.`;
   };
 
   const handleSendChatMessage = () => {
@@ -273,8 +263,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     // Calculate scores from cart items
     cartItems.forEach(item => {
-      // Use product key_benefits if available, otherwise fallback to mushroom effects
-      const effects = item.product.key_benefits || getMushroomEffects(item.product.name);
+      const mushroomName = item.product.name;
+      const effects = getMushroomEffects(mushroomName);
       
       effects.forEach(effect => {
         const category = getCategoryForEffect(effect);
@@ -413,19 +403,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     </div>
                   </div>
                   
-                  {/* Effects from products in this category */}
+                  {/* Effects from mushrooms in this category */}
                   <div className="ml-8 space-y-2 mt-3">
                     {(() => {
-                      const effectsInCategory: { effect: string; productName: string }[] = [];
+                      const effectsInCategory: { effect: string; mushroomName: string }[] = [];
                       
                       cartItems.forEach(item => {
-                        // Use product key_benefits if available, otherwise fallback to mushroom effects
-                        const effects = item.product.key_benefits || getMushroomEffects(item.product.name);
+                        const mushroomName = item.product.name;
+                        const effects = getMushroomEffects(mushroomName);
 
                         effects.forEach(effect => {
                           const effectCategory = getCategoryForEffect(effect);
                           if (effectCategory && effectCategory.name === category.name) {
-                            effectsInCategory.push({ effect, productName: item.product.name });
+                            effectsInCategory.push({ effect, mushroomName: item.product.name });
                           }
                         });
                       });
@@ -437,11 +427,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               {item.effect}
                             </span>
                             <span className="text-white/60 font-opensans text-xs bg-white/5 px-2 py-1 rounded-full">
-                              from {item.productName}
+                              from {item.mushroomName}
                             </span>
                           </div>
                           <motion.button
-                            onClick={() => handleAskAI(item.effect, item.productName)}
+                            onClick={() => handleAskAI(item.effect, item.mushroomName)}
                             className="px-3 py-1 bg-vibrant-orange/80 hover:bg-vibrant-orange text-white text-xs font-opensans font-medium rounded-full"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -472,10 +462,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               <motion.div 
                 key={item.product.id} 
                 className="flex items-center gap-3 bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors"
-                onClick={() => {
-                  setSelectedProductForPage(item.product);
-                  setShowProductPage(true);
-                }}
+                onClick={() => console.log('Navigate to product:', item.product.name)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -655,23 +642,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           Complete Purchase - ${finalTotal.toFixed(2)}
         </motion.button>
       </div>
-
-      {/* Product Page Modal */}
-      <ProductPage
-        product={selectedProductForPage}
-        isOpen={showProductPage}
-        onClose={() => {
-          setShowProductPage(false);
-          setSelectedProductForPage(null);
-        }}
-        onAddToCart={onAddToCart}
-        onAskAI={(question: string) => {
-          setSelectedEffect(question);
-          setShowChatbot(true);
-          setShowProductPage(false);
-          setSelectedProductForPage(null);
-        }}
-      />
     </div>
   );
 };

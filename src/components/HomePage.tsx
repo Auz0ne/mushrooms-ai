@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Send, Bot, User, ChevronLeft, ChevronRight, Info, ShoppingCart } from 'lucide-react';
 import { Product, Mushroom } from '../types';
-import { useMushroomProducts } from '../hooks/useMushroomProducts';
+import { MushroomService } from '../services/mushroomService';
 import { useChat } from '../hooks/useChat';
 import { getCategoriesForMushroom, getCategoryForEffect } from '../utils/categoryIcons';
-import { MushroomPage } from './MushroomPage';
 
 interface HomePageProps {
   onAddToCart: (product: Product) => void;
@@ -18,50 +17,55 @@ export const HomePage: React.FC<HomePageProps> = ({
   onGoToCheckout,
   cartItemsCount,
 }) => {
+  const [mushrooms, setMushrooms] = useState<Mushroom[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [isDeployed, setIsDeployed] = useState(false);
   const [showProductPresentation, setShowProductPresentation] = useState(false);
   const [selectedProductForPresentation, setSelectedProductForPresentation] = useState<Product | null>(null);
   const [showComposition, setShowComposition] = useState(false);
-  const [showMushroomPage, setShowMushroomPage] = useState(false);
-  const [selectedMushroomForPage, setSelectedMushroomForPage] = useState<Mushroom | null>(null);
   const { messages, isTyping, isStreaming, sendMessage } = useChat();
   
-  const { 
-    mushroomProducts, 
-    loading, 
-    error, 
-    getDisplayProducts, 
-    getDisplayProductByIndex,
-    getMushroomProductByIndex,
-    getDisplayProduct
-  } = useMushroomProducts();
-
-  // Set Reishi as default when data loads
   useEffect(() => {
-    if (mushroomProducts.length > 0) {
-      const reishiIndex = mushroomProducts.findIndex(mp => 
-        mp.mushroom.name.toLowerCase().includes('reishi')
-      );
-      if (reishiIndex !== -1) {
-        setCurrentProductIndex(reishiIndex);
+    const loadMushrooms = async () => {
+      try {
+        const data = await MushroomService.getAllMushrooms();
+        setMushrooms(data);
+        
+        // Set Reishi as the default selected mushroom
+        const reishiIndex = data.findIndex(mushroom => 
+          mushroom.name.toLowerCase().includes('reishi')
+        );
+        if (reishiIndex !== -1) {
+          setCurrentProductIndex(reishiIndex);
+        }
+      } catch (error) {
+        console.error('Failed to load mushrooms:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [mushroomProducts]);
+    };
 
-  const products = getDisplayProducts();
-  const currentProduct = getDisplayProductByIndex(currentProductIndex);
+    loadMushrooms();
+  }, []);
 
-  if (!currentProduct) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-white text-lg">No product selected</p>
-        </div>
-      </div>
-    );
-  }
+  // Convert mushroom to product format for display
+  const convertMushroomToProduct = (mushroom: Mushroom): Product => ({
+    id: mushroom.id,
+    name: mushroom.name,
+    price: 29.99, // Default price since not in database
+    image: mushroom.photo_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
+    video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
+    description: mushroom.story_behind_consumption || 'Premium mushroom supplement',
+    benefits: mushroom.expected_effects || [],
+    tags: mushroom.expected_effects?.slice(0, 3) || ['Natural', 'Organic'],
+    category: 'supplement',
+    inStock: true,
+  });
+
+  const products = mushrooms.map(convertMushroomToProduct);
+  const currentProduct = products[currentProductIndex];
 
   const handlePrevious = () => {
     setCurrentProductIndex(prev => 
@@ -83,24 +87,13 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   const handleMushroomSuggestion = (mushroom: Mushroom) => {
-    const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === mushroom.id);
-    if (mushroomProduct) {
-      const product = getDisplayProduct(mushroomProduct);
-      handleProductSuggestion(product);
-    }
+    const product = convertMushroomToProduct(mushroom);
+    handleProductSuggestion(product);
   };
 
   const handleProductTap = (product: Product) => {
-    // Find the associated mushroom for this product
-    const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === product.id);
-    if (mushroomProduct) {
-      setSelectedMushroomForPage(mushroomProduct.mushroom);
-      setShowMushroomPage(true);
-    } else {
-      // Fallback to product presentation if no mushroom found
-      setSelectedProductForPresentation(product);
-      setShowProductPresentation(true);
-    }
+    setSelectedProductForPresentation(product);
+    setShowProductPresentation(true);
   };
 
   const handleBackToProducts = () => {
@@ -113,7 +106,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     const question = `Tell me more about ${effect} and how it can benefit me`;
     const context = {
       cartItems: [],
-      currentProduct: currentProduct || undefined,
+      currentProduct: currentProduct,
     };
     sendMessage(question, context, handleMushroomSuggestion);
     setIsDeployed(true); // Deploy chatbot when asking AI
@@ -124,7 +117,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     if (inputValue.trim()) {
       const context = {
         cartItems: [],
-        currentProduct: currentProduct || undefined,
+        currentProduct: currentProduct,
       };
       sendMessage(inputValue.trim(), context, handleMushroomSuggestion);
       setInputValue('');
@@ -249,8 +242,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 
                 {(() => {
-                  const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === selectedProductForPresentation.id || mp.mushroom.id === selectedProductForPresentation.mushroom_id);
-                  const mushroom = mushroomProduct?.mushroom;
+                  const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
                   return (
                     <div className="space-y-2">
                       {mushroom?.scientific_name && (
@@ -273,15 +265,19 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Description - Full Width */}
             <div className="mb-4">
-              <p className="text-white/90 font-opensans text-sm leading-relaxed">
-                {selectedProductForPresentation.description}
-              </p>
+              {(() => {
+              const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
+                return (
+                  <p className="text-white/90 font-opensans text-sm leading-relaxed">
+                  {selectedProductForPresentation.description}
+                  </p>
+                );
+              })()}
             </div>
 
             {/* Database Information */}
             {(() => {
-              const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === selectedProductForPresentation.id || mp.mushroom.id === selectedProductForPresentation.mushroom_id);
-              const mushroom = mushroomProduct?.mushroom;
+              const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
               if (!mushroom) return null;
 
               return (
@@ -291,13 +287,12 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Effects by Category */}
             {(() => {
-              const mushroomProduct = mushroomProducts.find(mp => mp.product?.id === selectedProductForPresentation.id || mp.mushroom.id === selectedProductForPresentation.mushroom_id);
-              const mushroom = mushroomProduct?.mushroom;
+              const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
               if (!mushroom || !mushroom.expected_effects) return null;
 
               const categorizedEffects = new Map<string, { category: any, effects: string[] }>();
               
-              mushroom.expected_effects.forEach((effect: string) => {
+              mushroom.expected_effects.forEach(effect => {
                 const category = getCategoryForEffect(effect);
                 if (category) {
                   const key = category.name;
@@ -429,13 +424,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="mb-4 w-full">
               <div className="flex flex-wrap justify-center gap-2">
                 {(() => {
-                  if (!currentProduct) return null;
-                  const mushroomProduct = mushroomProducts.find(mp => mp.mushroom.id === currentProduct.id);
-                  const mushroom = mushroomProduct?.mushroom;
+                  const mushroom = mushrooms.find(m => m.id === currentProduct.id);
                   if (!mushroom) return null;
                   
                   const effects = mushroom.expected_effects || [];
-                  return effects.slice(0, 4).map((effect: string, index: number) => {
+                  return effects.slice(0, 4).map((effect, index) => {
                     const category = getCategoryForEffect(effect);
                     if (!category) return null;
                     
@@ -466,7 +459,6 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div
                 className="relative bg-transparent rounded-2xl overflow-hidden w-72 h-72 mx-auto"
                 onTouchStart={(e) => {
-                  if (!currentProduct) return;
                   const startX = e.touches[0].clientX;
                   const startY = e.touches[0].clientY;
                   const startTime = Date.now();
@@ -504,7 +496,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       } else {
                         handlePrevious();
                       }
-                    } else if (!hasMoved && !isVerticalScroll && timeDiff < 500 && currentProduct) {
+                    } else if (!hasMoved && !isVerticalScroll && timeDiff < 500) {
                       // It's a tap (no movement and quick)
                       handleProductTap(currentProduct);
                     }
@@ -529,7 +521,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                 >
                 {/* Product Video/Image */}
                 <div className="w-full h-full relative">
-                  {(() => { console.log('Current product image:', currentProduct.image, 'Video:', currentProduct.video); return null; })()}
                   {currentProduct.video ? (
                     <video
                       src={currentProduct.video}
@@ -838,37 +829,6 @@ export const HomePage: React.FC<HomePageProps> = ({
           </motion.button>
         </form>
       </div>
-
-      {/* Mushroom Page Modal */}
-      <MushroomPage
-        mushroom={selectedMushroomForPage}
-        associatedProduct={selectedMushroomForPage ? mushroomProducts.find(mp => mp.mushroom.id === selectedMushroomForPage.id)?.product || null : null}
-        isOpen={showMushroomPage}
-        onClose={() => {
-          setShowMushroomPage(false);
-          setSelectedMushroomForPage(null);
-        }}
-        onAddToCart={onAddToCart}
-        onAskAI={(question: string) => {
-          const context = {
-            cartItems: [],
-            currentProduct: selectedMushroomForPage ? {
-              id: selectedMushroomForPage.id,
-              name: selectedMushroomForPage.name,
-              price: 29.99, // Default price
-              image: selectedMushroomForPage.photo_url || '',
-              description: selectedMushroomForPage.story_behind_consumption || '',
-              benefits: selectedMushroomForPage.expected_effects || [],
-              tags: selectedMushroomForPage.expected_effects?.slice(0, 3) || [],
-              category: 'supplement',
-              inStock: true,
-            } : undefined,
-          };
-          sendMessage(question, context, handleMushroomSuggestion);
-          setShowMushroomPage(false);
-          setSelectedMushroomForPage(null);
-        }}
-      />
     </div>
   );
 };
