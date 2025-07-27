@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // GPT-4.1 mini
+      model: 'gpt-4.1-mini', // Updated to correct model name
       messages: openaiMessages,
       max_tokens: 500,
       temperature: 0.7,
