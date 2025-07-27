@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Minus, Trash2, CreditCard, ShoppingCart, Sparkles, X, User, Send } from 'lucide-react';
-import { CartItem } from '../types';
+import { CartItem, Product } from '../types';
 import { getCategoryForEffect } from '../utils/categoryIcons';
+import { ProductService } from '../services/productService';
 import { Promotion } from './Promotion';
 
 interface CheckoutPageProps {
@@ -105,6 +106,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const aiAssistantRef = useRef<HTMLDivElement>(null);
 
   const [completedArchetypes, setCompletedArchetypes] = useState<string[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Load products on component mount
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const productsData = await ProductService.getAllProducts();
+        setProducts(productsData);
+      } catch (error) {
+        console.error('Failed to load products:', error);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   // Helper function to get effects for a mushroom
   const getMushroomEffects = (mushroomName: string): string[] => {
@@ -303,25 +319,35 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const handleAddProducts = (productNames: string[]) => {
     productNames.forEach(productName => {
-      const productKey = productName.toLowerCase();
-      const productData = availableProducts[productKey as keyof typeof availableProducts];
+      // Find the product by name in the loaded products
+      const product = products.find(p => 
+        p.name.toLowerCase().includes(productName.toLowerCase()) ||
+        productName.toLowerCase().includes(p.name.toLowerCase())
+      );
       
-      if (productData) {
-        // Create a product object that matches your Product interface
-        const product = {
-          id: productData.id,
-          name: productData.name,
-          price: productData.price,
-          image: `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
-          description: `Premium ${productData.name} supplement`,
-          benefits: ['Natural wellness support'],
-          tags: ['Organic', 'Premium'],
-          category: 'supplement',
-          inStock: true,
-        };
-        
+      if (product) {
         // Add to cart
         onAddToCart(product);
+      } else {
+        // Fallback to hardcoded data if product not found
+        const productKey = productName.toLowerCase();
+        const productData = availableProducts[productKey as keyof typeof availableProducts];
+        
+        if (productData) {
+          const fallbackProduct = {
+            id: productData.id,
+            name: productData.name,
+            price: productData.price,
+            image: `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
+            description: `Premium ${productData.name} supplement`,
+            benefits: ['Natural wellness support'],
+            tags: ['Organic', 'Premium'],
+            category: 'supplement',
+            inStock: true,
+          };
+          
+          onAddToCart(fallbackProduct);
+        }
       }
     });
     

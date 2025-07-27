@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, Send, Bot, User, ChevronLeft, ChevronRight, Info, ShoppingCart } from 'lucide-react';
 import { Product, Mushroom } from '../types';
 import { MushroomService } from '../services/mushroomService';
+import { ProductService } from '../services/productService';
 import { useChat } from '../hooks/useChat';
 import { getCategoriesForMushroom, getCategoryForEffect } from '../utils/categoryIcons';
 
@@ -18,6 +19,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   cartItemsCount,
 }) => {
   const [mushrooms, setMushrooms] = useState<Mushroom[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
@@ -28,59 +30,85 @@ export const HomePage: React.FC<HomePageProps> = ({
   const { messages, isTyping, isStreaming, sendMessage } = useChat();
   
   useEffect(() => {
-    const loadMushrooms = async () => {
+    const loadData = async () => {
       try {
-        const data = await MushroomService.getAllMushrooms();
-        setMushrooms(data);
+        // Load mushrooms and products in parallel
+        const [mushroomsData, productsData] = await Promise.all([
+          MushroomService.getAllMushrooms(),
+          ProductService.getAllProducts()
+        ]);
+        
+        setMushrooms(mushroomsData);
+        setProducts(productsData);
         
         // Set Reishi as the default selected mushroom
-        const reishiIndex = data.findIndex(mushroom => 
+        const reishiIndex = mushroomsData.findIndex(mushroom => 
           mushroom.name.toLowerCase().includes('reishi')
         );
         if (reishiIndex !== -1) {
           setCurrentProductIndex(reishiIndex);
         }
       } catch (error) {
-        console.error('Failed to load mushrooms:', error);
+        console.error('Failed to load data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadMushrooms();
+    loadData();
   }, []);
 
-  // Convert mushroom to product format for display
-  const convertMushroomToProduct = (mushroom: Mushroom): Product => ({
-    id: mushroom.id,
-    name: mushroom.name,
-    price: 29.99, // Default price since not in database
-    image: mushroom.photo_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
-    video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
-    description: mushroom.story_behind_consumption || 'Premium mushroom supplement',
-    benefits: mushroom.expected_effects || [],
-    tags: mushroom.expected_effects?.slice(0, 3) || ['Natural', 'Organic'],
-    category: 'supplement',
-    inStock: true,
-  });
+  // Find the product associated with the current mushroom
+  const getProductForMushroom = (mushroom: Mushroom): Product | null => {
+    return products.find(product => product.mushroom_id === mushroom.id) || null;
+  };
 
-  const products = mushrooms.map(convertMushroomToProduct);
-  const currentProduct = products[currentProductIndex];
+  // Convert mushroom to product format for display (fallback if no product found)
+  const convertMushroomToProduct = (mushroom: Mushroom): Product => {
+    const associatedProduct = getProductForMushroom(mushroom);
+    
+    if (associatedProduct) {
+      return {
+        ...associatedProduct,
+        image: mushroom.photo_url || associatedProduct.image,
+        video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
+        description: mushroom.story_behind_consumption || associatedProduct.description,
+        benefits: mushroom.expected_effects || associatedProduct.benefits,
+      };
+    }
+    
+    // Fallback if no product found
+    return {
+      id: mushroom.id,
+      name: mushroom.name,
+      price: 29.99, // Default price
+      image: mushroom.photo_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
+      video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
+      description: mushroom.story_behind_consumption || 'Premium mushroom supplement',
+      benefits: mushroom.expected_effects || [],
+      tags: mushroom.expected_effects?.slice(0, 3) || ['Natural', 'Organic'],
+      category: 'supplement',
+      inStock: true,
+    };
+  };
+
+  const displayProducts = mushrooms.map(convertMushroomToProduct);
+  const currentProduct = displayProducts[currentProductIndex];
 
   const handlePrevious = () => {
     setCurrentProductIndex(prev => 
-      prev > 0 ? prev - 1 : products.length - 1
+      prev > 0 ? prev - 1 : displayProducts.length - 1
     );
   };
 
   const handleNext = () => {
     setCurrentProductIndex(prev => 
-      prev < products.length - 1 ? prev + 1 : 0
+      prev < displayProducts.length - 1 ? prev + 1 : 0
     );
   };
 
   const handleProductSuggestion = (product: Product) => {
-    const index = products.findIndex(p => p.id === product.id);
+    const index = displayProducts.findIndex(p => p.id === product.id);
     if (index !== -1) {
       setCurrentProductIndex(index);
     }
@@ -144,7 +172,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     );
   }
 
-  if (products.length === 0) {
+  if (displayProducts.length === 0) {
     return (
       <div className="h-dvh bg-dark-matte flex items-center justify-center">
         <div className="text-white font-inter">No mushrooms found</div>
