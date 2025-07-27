@@ -58,30 +58,20 @@ export const HomePage: React.FC<HomePageProps> = ({
     loadData();
   }, []);
 
-  // Find the product associated with the current mushroom
-  const getProductForMushroom = (mushroom: Mushroom): Product | null => {
-    return products.find(product => product.mushroom_id === mushroom.id) || null;
+  // Find the product associated with the current mushroom (for price only)
+  const getProductPriceForMushroom = (mushroom: Mushroom): number | null => {
+    const associatedProduct = products.find(product => product.mushroom_id === mushroom.id);
+    return associatedProduct ? associatedProduct.price : null;
   };
 
-  // Convert mushroom to product format for display (fallback if no product found)
+  // Convert mushroom to product format for display (keep all mushroom data, only update price)
   const convertMushroomToProduct = (mushroom: Mushroom): Product => {
-    const associatedProduct = getProductForMushroom(mushroom);
+    const productPrice = getProductPriceForMushroom(mushroom);
     
-    if (associatedProduct) {
-      return {
-        ...associatedProduct,
-        image: mushroom.photo_url || associatedProduct.image,
-        video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
-        description: mushroom.story_behind_consumption || associatedProduct.description,
-        benefits: mushroom.expected_effects || associatedProduct.benefits,
-      };
-    }
-    
-    // Fallback if no product found
     return {
       id: mushroom.id,
       name: mushroom.name,
-      price: 29.99, // Default price
+      price: productPrice || 29.99, // Use product price if available, otherwise default
       image: mushroom.photo_url || `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
       video: (mushroom.video_url && (mushroom.video_url.startsWith('http://') || mushroom.video_url.startsWith('https://'))) ? mushroom.video_url : undefined,
       description: mushroom.story_behind_consumption || 'Premium mushroom supplement',

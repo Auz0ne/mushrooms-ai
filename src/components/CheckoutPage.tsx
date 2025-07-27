@@ -319,35 +319,31 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const handleAddProducts = (productNames: string[]) => {
     productNames.forEach(productName => {
-      // Find the product by name in the loaded products
-      const product = products.find(p => 
-        p.name.toLowerCase().includes(productName.toLowerCase()) ||
-        productName.toLowerCase().includes(p.name.toLowerCase())
-      );
+      const productKey = productName.toLowerCase();
+      const productData = availableProducts[productKey as keyof typeof availableProducts];
       
-      if (product) {
+      if (productData) {
+        // Find the actual product price from database
+        const actualProduct = products.find(p => 
+          p.name.toLowerCase().includes(productName.toLowerCase()) ||
+          productName.toLowerCase().includes(p.name.toLowerCase())
+        );
+        
+        // Create a product object that matches your Product interface
+        const product = {
+          id: productData.id,
+          name: productData.name,
+          price: actualProduct ? actualProduct.price : productData.price, // Use actual price if found
+          image: `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
+          description: `Premium ${productData.name} supplement`,
+          benefits: ['Natural wellness support'],
+          tags: ['Organic', 'Premium'],
+          category: 'supplement',
+          inStock: true,
+        };
+        
         // Add to cart
         onAddToCart(product);
-      } else {
-        // Fallback to hardcoded data if product not found
-        const productKey = productName.toLowerCase();
-        const productData = availableProducts[productKey as keyof typeof availableProducts];
-        
-        if (productData) {
-          const fallbackProduct = {
-            id: productData.id,
-            name: productData.name,
-            price: productData.price,
-            image: `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
-            description: `Premium ${productData.name} supplement`,
-            benefits: ['Natural wellness support'],
-            tags: ['Organic', 'Premium'],
-            category: 'supplement',
-            inStock: true,
-          };
-          
-          onAddToCart(fallbackProduct);
-        }
       }
     });
     
