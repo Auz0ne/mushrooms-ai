@@ -3,12 +3,37 @@ export interface Product {
   name: string;
   price: number;
   image: string;
-  video?: string;
   description: string;
   benefits: string[];
   tags: string[];
   category: string;
   inStock: boolean;
+  // New fields for the products table
+  main_ingredient?: string;
+  format?: string;
+  pills_per_container?: number;
+  daily_dose?: string;
+  use_instructions?: string;
+  key_benefits?: string[];
+  short_description?: string;
+  certifications_notes?: string;
+  mushroom_id?: string;
+}
+
+export interface DatabaseProduct {
+  id: string;
+  name: string;
+  main_ingredient: string;
+  format: string;
+  pills_per_container: number;
+  daily_dose: string;
+  use_instructions: string;
+  key_benefits: string[];
+  short_description: string;
+  certifications_notes: string;
+  price: number;
+  mushroom_id: string | null;
+  created_at: string;
 }
 
 export interface CartItem {
