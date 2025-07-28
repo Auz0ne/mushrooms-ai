@@ -132,6 +132,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         const stripeProductsData = await StripeProductService.getAllProducts();
         setStripeProducts(stripeProductsData);
         console.log('Loaded Stripe products:', stripeProductsData.length);
+        console.log('Stripe products metadata:', stripeProductsData.map(sp => ({
+          name: sp.name,
+          mushroom_id: sp.metadata.mushroom_id,
+          price: sp.price
+        })));
       } catch (error) {
         console.error('Failed to load Stripe products:', error);
       }
@@ -147,7 +152,55 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Helper function to get Stripe product data for a mushroom
   const getStripeProductForMushroom = (mushroomId: string) => {
-    return stripeProducts.find(sp => sp.metadata.mushroom_id === mushroomId);
+    console.log('Looking for Stripe product for mushroom ID:', mushroomId);
+    console.log('Available Stripe products:', stripeProducts.map(sp => ({
+      name: sp.name,
+      mushroom_id: sp.metadata.mushroom_id
+    })));
+    
+    const found = stripeProducts.find(sp => sp.metadata.mushroom_id === mushroomId);
+    console.log('Found Stripe product:', found ? found.name : 'None');
+    return found;
+  };
+
+  // Helper function to get Stripe product data for a mushroom by name
+  const getStripeProductForMushroomByName = (mushroomName: string) => {
+    // Map mushroom names to Stripe product IDs
+    const nameToStripeId: { [key: string]: string } = {
+      'reishi': 'reishi',
+      'lion\'s mane': 'lions_mane',
+      'lions mane': 'lions_mane',
+      'cordyceps': 'cordyceps',
+      'chaga': 'chaga',
+      'maitake': 'maitake',
+      'shiitake': 'shiitake',
+      'turkey tail': 'turkey_tail',
+      'tremella': 'tremella',
+      'agaricus blazei': 'agaricus_blazei',
+      'poria': 'poria',
+      'king trumpet': 'king_trumpet',
+      'enoki': 'enoki',
+      'mesima': 'mesima',
+      'polyporus': 'polyporus'
+    };
+    
+    const mushroomNameLower = mushroomName.toLowerCase();
+    const stripeId = nameToStripeId[mushroomNameLower];
+    
+    console.log('Looking for Stripe product by name:', {
+      mushroomName,
+      mushroomNameLower,
+      stripeId
+    });
+    
+    if (!stripeId) {
+      console.log('No mapping found for mushroom name:', mushroomName);
+      return null;
+    }
+    
+    const found = stripeProducts.find(sp => sp.metadata.mushroom_id === stripeId);
+    console.log('Found Stripe product by name:', found ? found.name : 'None');
+    return found;
   };
 
   // Helper function to get effects for a mushroom
@@ -524,10 +577,26 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           <h2 className="font-inter font-semibold text-white mb-4">Your Supplements</h2>
           <div className="space-y-3">
             {cartItems.map((item) => {
-              const stripeProduct = getStripeProductForMushroom(item.product.id);
+              console.log('Processing cart item:', {
+                mushroomId: item.product.id,
+                mushroomName: item.product.name,
+                mushroomPrice: item.product.price,
+                mushroomIdType: typeof item.product.id,
+                mushroomIdLength: item.product.id?.length
+              });
+              
+              // Try to find Stripe product by mushroom name instead of ID
+              const stripeProduct = getStripeProductForMushroomByName(item.product.name);
               const displayName = stripeProduct?.name || item.product.name;
               const displayPrice = stripeProduct?.price || item.product.price;
               const displayImage = stripeProduct?.image || item.product.image;
+              
+              console.log('Display data:', {
+                displayName,
+                displayPrice,
+                displayImage,
+                hasStripeProduct: !!stripeProduct
+              });
               
               return (
                 <motion.div 
