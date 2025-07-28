@@ -5,7 +5,6 @@ import { CartItem, Product } from '../types';
 import { getCategoryForEffect } from '../utils/categoryIcons';
 import { ProductService } from '../services/productService';
 import { StripeService } from '../services/stripeService';
-import { StripeProductService } from '../services/stripeProductService';
 import { Promotion } from './Promotion';
 
 interface CheckoutPageProps {
@@ -129,10 +128,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   useEffect(() => {
     const loadStripeProducts = async () => {
       try {
-        const stripeProductsData = await StripeProductService.getAllProducts();
-        setStripeProducts(stripeProductsData);
-        console.log('Loaded Stripe products:', stripeProductsData.length);
-        console.log('Stripe products metadata:', stripeProductsData.map(sp => ({
+        const response = await fetch('/api/stripe/products');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setStripeProducts(data);
+        console.log('Loaded Stripe products:', data.length);
+        console.log('Stripe products metadata:', data.map((sp: any) => ({
           name: sp.name,
           mushroom_id: sp.metadata.mushroom_id,
           price: sp.price
