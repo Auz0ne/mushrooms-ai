@@ -37,17 +37,58 @@ export async function POST(request: NextRequest) {
     const stripeProducts = await StripeProductService.getAllProducts();
     console.log('Available Stripe products:', stripeProducts.length);
     
+    // Map mushroom names to Stripe product IDs (same as in CheckoutPage)
+    const nameToStripeId: { [key: string]: string } = {
+      'reishi': 'reishi',
+      'lion\'s mane': 'lions_mane',
+      'lions mane': 'lions_mane',
+      'cordyceps': 'cordyceps',
+      'chaga': 'chaga',
+      'maitake': 'maitake',
+      'shiitake': 'shiitake',
+      'turkey tail': 'turkey_tail',
+      'tremella': 'tremella',
+      'agaricus blazei': 'agaricus_blazei',
+      'poria': 'poria',
+      'king trumpet': 'king_trumpet',
+      'enoki': 'enoki',
+      'mesima': 'mesima',
+      'polyporus': 'polyporus'
+    };
+    
     const lineItems = cartItems.map((item: any) => {
       console.log('Processing cart item:', item.product.name);
       
-      // For mushrooms, we need to find the associated product in the database
-      // and then match that product to a Stripe product
-      const mushroomId = item.product.id; // This is the mushroom ID from the database
-      console.log('Processing mushroom with ID:', mushroomId);
+      // Use name-based matching instead of ID-based matching
+      const mushroomNameLower = item.product.name.toLowerCase();
+      const stripeId = nameToStripeId[mushroomNameLower];
       
-      // First, try to find a matching Stripe product by mushroom_id
+      console.log('Looking for Stripe product by name:', {
+        mushroomName: item.product.name,
+        mushroomNameLower,
+        stripeId
+      });
+      
+      if (!stripeId) {
+        console.log('No mapping found for mushroom name:', item.product.name);
+        // Fallback to dynamic pricing
+        return {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.product.name,
+              description: item.product.description || `Premium ${item.product.name} supplement`,
+              images: [item.product.image],
+            },
+            unit_amount: Math.round(item.product.price * 100), // Convert to cents
+          },
+          quantity: item.quantity,
+        };
+      }
+      
+      // Find matching Stripe product by name mapping
       const stripeProduct = stripeProducts.find(sp => 
-        sp.metadata.mushroom_id === mushroomId
+        sp.metadata.mushroom_id === stripeId
       );
 
       if (stripeProduct) {
