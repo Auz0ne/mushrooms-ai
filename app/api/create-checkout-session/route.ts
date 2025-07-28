@@ -37,39 +37,39 @@ export async function POST(request: NextRequest) {
     const stripeProducts = await StripeProductService.getAllProducts();
     console.log('Available Stripe products:', stripeProducts.length);
     
-    // Map mushroom names to Stripe product IDs (same as in CheckoutPage)
-    const nameToStripeId: { [key: string]: string } = {
-      'reishi': 'reishi',
-      'lion\'s mane': 'lions_mane',
-      'lions mane': 'lions_mane',
-      'cordyceps': 'cordyceps',
-      'chaga': 'chaga',
-      'maitake': 'maitake',
-      'shiitake': 'shiitake',
-      'turkey tail': 'turkey_tail',
-      'tremella': 'tremella',
-      'agaricus blazei': 'agaricus_blazei',
-      'poria': 'poria',
-      'king trumpet': 'king_trumpet',
-      'enoki': 'enoki',
-      'mesima': 'mesima',
-      'polyporus': 'polyporus'
+    // Map mushroom names to actual product names (from products table)
+    const mushroomToProductName: { [key: string]: string } = {
+      'reishi': 'Reishi Immune Calm',
+      'lion\'s mane': 'Lion\'s Mane Focus',
+      'lions mane': 'Lion\'s Mane Focus',
+      'cordyceps': 'Cordyceps Vitality',
+      'chaga': 'Chaga Antioxidant',
+      'maitake': 'Maitake Wellness',
+      'shiitake': 'Shiitake Digestive',
+      'turkey tail': 'Turkey Tail Defend',
+      'tremella': 'Tremella Beauty',
+      'agaricus blazei': 'Agaricus Blazei Protect',
+      'poria': 'Poria Serenity',
+      'king trumpet': 'King Trumpet Heart',
+      'enoki': 'Enoki Gut Health',
+      'oyster': 'Oyster Recovery',
+      'mesima': 'Mesima Defense'
     };
     
     const lineItems = cartItems.map((item: any) => {
       console.log('Processing cart item:', item.product.name);
       
-      // Use name-based matching instead of ID-based matching
+      // Use name-based matching to find the actual product name
       const mushroomNameLower = item.product.name.toLowerCase();
-      const stripeId = nameToStripeId[mushroomNameLower];
+      const productName = mushroomToProductName[mushroomNameLower];
       
       console.log('Looking for Stripe product by name:', {
         mushroomName: item.product.name,
         mushroomNameLower,
-        stripeId
+        productName
       });
       
-      if (!stripeId) {
+      if (!productName) {
         console.log('No mapping found for mushroom name:', item.product.name);
         // Fallback to dynamic pricing
         return {
@@ -86,9 +86,9 @@ export async function POST(request: NextRequest) {
         };
       }
       
-      // Find matching Stripe product by name mapping
+      // Find matching Stripe product by actual product name
       const stripeProduct = stripeProducts.find(sp => 
-        sp.metadata.mushroom_id === stripeId
+        sp.name === productName
       );
 
       if (stripeProduct) {
