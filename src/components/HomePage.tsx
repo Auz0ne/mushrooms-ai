@@ -1032,7 +1032,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="flex items-start gap-4 mb-6">
                 <img src="/Janus-Logo.png" alt="AI Assistant" className="w-8 h-8 flex-shrink-0 mt-1" />
                 <div className="text-white text-base leading-relaxed">
-                  Hi there! 👋 I'm your AI mushroom supplement advisor. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?
+                  Hi there! 👋 I&apos;m your AI mushroom supplement advisor. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?
                 </div>
               </div>
             )}
