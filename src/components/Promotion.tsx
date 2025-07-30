@@ -5,7 +5,7 @@ import { CartItem, Product } from '../types';
 
 interface PromotionProps {
   cartItems: CartItem[];
-  onAddProducts: (productNames: string[]) => void;
+  onAddProducts: (productIds: string[]) => void;
   products: Product[];
 }
 
@@ -13,7 +13,7 @@ interface ArchetypeData {
   id: string;
   name: string;
   icon: string;
-  requiredMushrooms: string[];
+  requiredProductNames: string[];
   discount: number;
   description: string;
 }
@@ -23,7 +23,7 @@ const archetypes: ArchetypeData[] = [
     id: 'mentalist',
     name: 'Mentalist',
     icon: '/compressed_Brain-Photoroom.png',
-    requiredMushrooms: ["Lion's Mane", 'Cordyceps', 'Reishi'],
+    requiredProductNames: ["Lion's Mane Focus", 'Cordyceps Vitality', 'Reishi Immune Calm'],
     discount: 20,
     description: 'Cognitive Power & Focus'
   },
@@ -31,7 +31,7 @@ const archetypes: ArchetypeData[] = [
     id: 'guardian',
     name: 'Guardian',
     icon: '/compressed_Shield-Photoroom.png',
-    requiredMushrooms: ['Reishi', 'Turkey Tail', 'Chaga'],
+    requiredProductNames: ['Reishi Immune Calm', 'Turkey Tail Defend', 'Chaga Antioxidant'],
     discount: 20,
     description: 'Immunity & Wellness Protection'
   },
@@ -39,7 +39,7 @@ const archetypes: ArchetypeData[] = [
     id: 'athlete',
     name: 'Athlete',
     icon: '/compressed_Lightning-Photoroom.png',
-    requiredMushrooms: ['Cordyceps', 'King Trumpet', 'Maitake'],
+    requiredProductNames: ['Cordyceps Vitality', 'King Trumpet Heart', 'Maitake Wellness'],
     discount: 20,
     description: 'Energy, Vitality & Fitness'
   },
@@ -47,7 +47,7 @@ const archetypes: ArchetypeData[] = [
     id: 'radiant',
     name: 'Radiant',
     icon: '/compressed_Lotus-Photoroom.png',
-    requiredMushrooms: ['Tremella', 'Chaga', 'Shiitake'],
+    requiredProductNames: ['Tremella Beauty', 'Chaga Antioxidant', 'Shiitake Digestive'],
     discount: 20,
     description: 'Beauty, Skin & Longevity'
   },
@@ -55,7 +55,7 @@ const archetypes: ArchetypeData[] = [
     id: 'zen_seeker',
     name: 'Zen Seeker',
     icon: '/compressed_Spiral-Photoroom.png',
-    requiredMushrooms: ['Reishi', 'Poria', 'Maitake'],
+    requiredProductNames: ['Reishi Immune Calm', 'Poria Serenity', 'Maitake Wellness'],
     discount: 20,
     description: 'Calm, Stress Relief & Sleep'
   },
@@ -63,80 +63,81 @@ const archetypes: ArchetypeData[] = [
     id: 'gut_guru',
     name: 'Gut Guru',
     icon: '/compressed_Drop-Photoroom.png',
-    requiredMushrooms: ['Shiitake', 'Turkey Tail', 'Enoki'],
+    requiredProductNames: ['Shiitake Digestive', 'Turkey Tail Defend', 'Enoki Gut Health'],
     discount: 20,
     description: 'Digestive & Gut Health'
   }
 ];
 
 export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, products }) => {
-  const cartMushroomNames = cartItems.map(item => item.product.name);
-  
+  const cartProductNames = cartItems.map(item => item.product.name);
+
   // Find the most relevant archetype to suggest
-  const findBestArchetype = (): { archetype: ArchetypeData; missingProducts: string[]; progress: number } | null => {
+  const findBestArchetype = (): { archetype: ArchetypeData; missingProducts: Product[]; progress: number } | null => {
     let bestMatch = null;
     let highestProgress = 0;
-    
+
     for (const archetype of archetypes) {
-      const ownedMushrooms = archetype.requiredMushrooms.filter(required =>
-        cartMushroomNames.some(cartName => 
-          cartName.toLowerCase().includes(required.toLowerCase())
+      const ownedProducts = archetype.requiredProductNames.filter(required =>
+        cartProductNames.some(cartName =>
+          cartName.toLowerCase().includes(required.toLowerCase()) ||
+          required.toLowerCase().includes(cartName.toLowerCase())
         )
       );
-      
-      const missingMushrooms = archetype.requiredMushrooms.filter(required =>
-        !cartMushroomNames.some(cartName => 
-          cartName.toLowerCase().includes(required.toLowerCase())
+
+      const missingProductNames = archetype.requiredProductNames.filter(required =>
+        !cartProductNames.some(cartName =>
+          cartName.toLowerCase().includes(required.toLowerCase()) ||
+          required.toLowerCase().includes(cartName.toLowerCase())
         )
       );
-      
-      const progress = ownedMushrooms.length / archetype.requiredMushrooms.length;
-      
-      // Only suggest if user has at least 1 mushroom and it's not complete
-      if (ownedMushrooms.length > 0 && missingMushrooms.length > 0 && progress > highestProgress) {
+
+      // Find actual product objects for missing products
+      const missingProducts = missingProductNames
+        .map(productName => products.find(p =>
+          p.name.toLowerCase().includes(productName.toLowerCase()) ||
+          productName.toLowerCase().includes(p.name.toLowerCase())
+        ))
+        .filter(Boolean) as Product[];
+
+      const progress = ownedProducts.length / archetype.requiredProductNames.length;
+
+      // Only suggest if user has at least 1 product and it's not complete
+      if (ownedProducts.length > 0 && missingProducts.length > 0 && progress > highestProgress) {
         highestProgress = progress;
         bestMatch = {
           archetype,
-          missingProducts: missingMushrooms,
+          missingProducts,
           progress
         };
       }
     }
-    
+
     return bestMatch;
   };
 
   const suggestion = findBestArchetype();
-  
+
   if (!suggestion) {
     return null; // Don't show promotion if no relevant archetype found
   }
 
   const { archetype, missingProducts } = suggestion;
-  
-  // Helper function to get product price by name
-  const getProductPrice = (productName: string): number => {
-    const product = products.find(p => 
-      p.name.toLowerCase().includes(productName.toLowerCase()) ||
-      productName.toLowerCase().includes(p.name.toLowerCase())
-    );
-    return product ? product.price : 29.99; // Default fallback
-  };
-  
+
   // Calculate total cost using actual product prices
-  const totalAdditionalCost = missingProducts.reduce((total, productName) => {
-    return total + getProductPrice(productName);
+  const totalAdditionalCost = missingProducts.reduce((total, product) => {
+    return total + product.price;
   }, 0);
-  
-  const formatProductList = (products: string[]) => {
+
+  const formatProductList = (products: Product[]) => {
     if (products.length === 1) {
-      return `"${products[0]}"`;
+      return `"${products[0].name}"`;
     } else if (products.length === 2) {
-      return `"${products[0]}" and "${products[1]}"`;
+      return `"${products[0].name}" and "${products[1].name}"`;
     } else {
       const lastProduct = products[products.length - 1];
       const otherProducts = products.slice(0, -1);
-      return `"${otherProducts.join('", "')}" and "${lastProduct}"`;
+      return `"${otherProducts.map(p => p.name).join('", "')}" and "${lastProduct.name}"`;
     }
   };
 
@@ -158,7 +159,6 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, 
             <Sparkles className="w-3 h-3 text-white" />
           </div>
         </div>
-        
         <div className="flex-1">
           <h3 className="font-inter font-bold text-white text-lg">
             Unlock {archetype.name} Achievement
@@ -167,7 +167,6 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, 
             {archetype.description}
           </p>
         </div>
-        
         <div className="text-right">
           <div className="text-vibrant-orange font-inter font-bold text-lg">
             {archetype.discount}% OFF
@@ -177,7 +176,6 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, 
           </div>
         </div>
       </div>
-
       {/* Missing Products */}
       <div className="mb-4">
         <h4 className="text-white font-inter font-semibold text-sm mb-2">
@@ -186,14 +184,13 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, 
         <div className="space-y-2">
           {missingProducts.map((product, index) => (
             <div key={index} className="flex items-center justify-between bg-white/5 rounded-lg p-2">
-              <span className="text-white font-opensans text-sm">{product}</span>
+              <span className="text-white font-opensans text-sm">{product.name}</span>
               <span className="text-vibrant-orange font-opensans font-semibold text-sm">
-                ${getProductPrice(product).toFixed(2)}
+                ${product.price.toFixed(2)}
               </span>
             </div>
           ))}
         </div>
-        
         {/* Total Additional Cost */}
         <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/20">
           <span className="text-white/80 font-opensans text-sm">
@@ -204,7 +201,6 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, 
           </span>
         </div>
       </div>
-
       {/* Call to Action */}
       <div className="flex items-center gap-3">
         <div className="flex-1">
@@ -212,11 +208,10 @@ export const Promotion: React.FC<PromotionProps> = ({ cartItems, onAddProducts, 
             Add {formatProductList(missingProducts)} to unlock the <span className="font-semibold text-vibrant-orange">{archetype.name}</span> achievement
           </p>
         </div>
-        
         <motion.button
           onClick={() => {
             // Add all missing products to complete the archetype
-            onAddProducts(missingProducts);
+            onAddProducts(missingProducts.map(p => p.id));
           }}
           className="px-6 py-2 bg-vibrant-orange hover:bg-orange-600 text-white font-opensans font-semibold rounded-lg flex items-center gap-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-vibrant-orange focus:ring-offset-2"
           whileHover={{ scale: 1.05 }}

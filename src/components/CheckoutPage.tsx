@@ -128,7 +128,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   useEffect(() => {
     const loadStripeProducts = async () => {
       try {
-        const response = await fetch('/api/stripe/products');
+        const response = await fetch('/api/stripe-products');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -216,6 +216,53 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     return found;
   };
 
+  // Helper function to get the associated mushroom name for a product
+  const getMushroomNameFromProduct = (productName: string): string => {
+    const name = productName.toLowerCase();
+    
+    // Map product names back to their associated mushroom names
+    if (name.includes('reishi immune calm')) {
+      return 'Reishi';
+    } else if (name.includes("lion's mane focus")) {
+      return "Lion's Mane";
+    } else if (name.includes('cordyceps vitality')) {
+      return 'Cordyceps';
+    } else if (name.includes('chaga antioxidant')) {
+      return 'Chaga';
+    } else if (name.includes('turkey tail defend')) {
+      return 'Turkey Tail';
+    } else if (name.includes('maitake wellness')) {
+      return 'Maitake';
+    } else if (name.includes('shiitake digestive')) {
+      return 'Shiitake';
+    } else if (name.includes('tremella beauty')) {
+      return 'Tremella';
+    } else if (name.includes('poria serenity')) {
+      return 'Poria';
+    } else if (name.includes('king trumpet heart')) {
+      return 'King Trumpet';
+    } else if (name.includes('enoki gut health')) {
+      return 'Enoki';
+    } else if (name.includes('oyster recovery')) {
+      return 'Oyster';
+    } else if (name.includes('mesima defense')) {
+      return 'Mesima';
+    } else {
+      // Fallback: try to extract the mushroom name from the product name
+      // This handles cases where the product name contains the mushroom name
+      const mushroomNames = ['reishi', 'lion\'s mane', 'cordyceps', 'chaga', 'turkey tail', 'maitake', 'shiitake', 'tremella', 'poria', 'king trumpet', 'enoki', 'oyster', 'mesima'];
+      
+      for (const mushroomName of mushroomNames) {
+        if (name.includes(mushroomName)) {
+          return mushroomName.charAt(0).toUpperCase() + mushroomName.slice(1);
+        }
+      }
+      
+      // If no match found, return the original product name
+      return productName;
+    }
+  };
+
   // Helper function to get effects for a mushroom
   const getMushroomEffects = (mushroomName: string): string[] => {
     const name = mushroomName.toLowerCase();
@@ -250,23 +297,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       
       const newCompletedArchetypes: string[] = [];
       
-      // Check each archetype
-      if (cartProductNames.has("lion's mane") && cartProductNames.has('cordyceps') && cartProductNames.has('reishi')) {
+      // Check each archetype using new product names
+      if (cartProductNames.has("lion's mane focus") && cartProductNames.has('cordyceps vitality') && cartProductNames.has('reishi immune calm')) {
         newCompletedArchetypes.push('Mentalist');
       }
-      if (cartProductNames.has('reishi') && cartProductNames.has('turkey tail') && cartProductNames.has('chaga')) {
+      if (cartProductNames.has('reishi immune calm') && cartProductNames.has('turkey tail defend') && cartProductNames.has('chaga antioxidant')) {
         newCompletedArchetypes.push('Guardian');
       }
-      if (cartProductNames.has('cordyceps') && cartProductNames.has('king trumpet') && cartProductNames.has('maitake')) {
+      if (cartProductNames.has('cordyceps vitality') && cartProductNames.has('king trumpet heart') && cartProductNames.has('maitake wellness')) {
         newCompletedArchetypes.push('Athlete');
       }
-      if (cartProductNames.has('tremella') && cartProductNames.has('chaga') && cartProductNames.has('shiitake')) {
+      if (cartProductNames.has('tremella beauty') && cartProductNames.has('chaga antioxidant') && cartProductNames.has('shiitake digestive')) {
         newCompletedArchetypes.push('Radiant');
       }
-      if (cartProductNames.has('reishi') && cartProductNames.has('poria') && cartProductNames.has('maitake')) {
+      if (cartProductNames.has('reishi immune calm') && cartProductNames.has('poria serenity') && cartProductNames.has('maitake wellness')) {
         newCompletedArchetypes.push('Zen Seeker');
       }
-      if (cartProductNames.has('shiitake') && cartProductNames.has('turkey tail') && cartProductNames.has('enoki')) {
+      if (cartProductNames.has('shiitake digestive') && cartProductNames.has('turkey tail defend') && cartProductNames.has('enoki gut health')) {
         newCompletedArchetypes.push('Gut Guru');
       }
       
@@ -397,11 +444,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   }, [cartItems]);
 
   const getDiscountAmount = () => {
+    console.log('Checking discount - completed archetypes:', completedArchetypes);
+    console.log('Cart total:', cartTotal);
+    
     // Only apply discount if there are completed archetypes from the Promotion component
-    if (completedArchetypes.length === 0) return 0;
+    if (completedArchetypes.length === 0) {
+      console.log('No completed archetypes, no discount applied');
+      return 0;
+    }
     
     // Apply 20% discount for completed archetypes
-    return (cartTotal * 20) / 100;
+    const discount = (cartTotal * 20) / 100;
+    console.log('Discount calculated:', discount);
+    return discount;
   };
 
   const finalTotal = cartTotal - getDiscountAmount();
@@ -411,36 +466,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     console.log(`Adding ${mushroomName} to complete archetype`);
   };
 
-  const handleAddProducts = (productNames: string[]) => {
-    productNames.forEach(productName => {
-      const productKey = productName.toLowerCase();
-      const productData = availableProducts[productKey as keyof typeof availableProducts];
-      
-      if (productData) {
-        // Find the actual product price from database
-        const actualProduct = products.find(p => 
-          p.name.toLowerCase().includes(productName.toLowerCase()) ||
-          productName.toLowerCase().includes(p.name.toLowerCase())
-        );
-        
-        // Create a product object that matches your Product interface
-        const product = {
-          id: productData.id,
-          name: productData.name,
-          price: actualProduct ? actualProduct.price : productData.price, // Use actual price if found
-          image: `https://images.pexels.com/photos/8142034/pexels-photo-8142034.jpeg?auto=compress&cs=tinysrgb&w=800`,
-          description: `Premium ${productData.name} supplement`,
-          benefits: ['Natural wellness support'],
-          tags: ['Organic', 'Premium'],
-          category: 'supplement',
-          inStock: true,
-        };
-        
-        // Add to cart
+  // Update the handleAddProducts function to work with product IDs
+  const handleAddProducts = (productIds: string[]) => {
+    productIds.forEach(productId => {
+      // Find the actual product from the database
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        // Add the real product to cart
         onAddToCart(product);
+      } else {
+        console.warn(`Product with ID ${productId} not found`);
       }
     });
-    
     // The useEffect will automatically detect completed archetypes
   };
 
@@ -539,13 +576,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       const effectsInCategory: { effect: string; mushroomName: string }[] = [];
                       
                       cartItems.forEach(item => {
-                        const mushroomName = item.product.name;
+                        const productName = item.product.name;
+                        const mushroomName = getMushroomNameFromProduct(productName);
                         const effects = getMushroomEffects(mushroomName);
 
                         effects.forEach(effect => {
                           const effectCategory = getCategoryForEffect(effect);
                           if (effectCategory && effectCategory.name === category.name) {
-                            effectsInCategory.push({ effect, mushroomName: item.product.name });
+                            effectsInCategory.push({ effect, mushroomName });
                           }
                         });
                       });
@@ -713,7 +751,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
             
             {/* Chat Messages */}
-            <div className="overflow-y-auto space-y-3 mb-4 max-h-80">
+            <div className="overflow-y-auto space-y-4 mb-4 max-h-80">
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -722,26 +760,35 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   }`}
                 >
                   {message.sender === 'bot' && (
-                    <div className="w-6 h-6 bg-transparent border-2 border-white rounded-full flex items-center justify-center flex-shrink-0">
-                    </div>
+                    <img 
+                      src="/Janus-Logo.png" 
+                      alt="AI Assistant" 
+                      className="w-8 h-8 flex-shrink-0"
+                    />
                   )}
 
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      message.sender === 'user'
-                        ? 'bg-vibrant-orange text-white'
-                        : 'bg-white/20 backdrop-blur-sm border border-white/30 text-white'
-                    }`}
-                  >
-                    <p className="font-opensans text-xs leading-snug">
-                      {message.content}
-                    </p>
+                  <div className="max-w-[80%]">
+                    <div className={`font-opensans text-xs leading-snug drop-shadow-sm ${
+                      message.sender === 'user' ? 'text-vibrant-orange font-semibold' : 'text-white'
+                    }`}>
+                      {message.sender === 'bot' ? (
+                        message.content.split('\n').map((paragraph, index) => (
+                          <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                            {paragraph}
+                          </p>
+                        ))
+                      ) : (
+                        <p>{message.content}</p>
+                      )}
+                    </div>
                   </div>
 
                   {message.sender === 'user' && (
-                    <div className="w-6 h-6 bg-dark-grey rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="w-3 h-3 text-white" />
-                    </div>
+                    <img 
+                      src="/User.png" 
+                      alt="User" 
+                      className="w-8 h-8 flex-shrink-0"
+                    />
                   )}
                 </div>
               ))}
@@ -749,10 +796,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               {/* Typing Indicator */}
               {isChatTyping && (
                 <div className="flex gap-3 justify-start">
-                  <div className="w-6 h-6 bg-transparent border-2 border-white rounded-full flex items-center justify-center">
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl px-3 py-2">
-                    <div className="flex gap-1">
+                  <img 
+                    src="/Janus-Logo.png" 
+                    alt="AI Assistant" 
+                    className="w-6 h-6 flex-shrink-0"
+                  />
+                  <div className="max-w-[80%]">
+                    <div className="flex gap-1 drop-shadow-sm">
                       <div className="w-1 h-1 bg-white rounded-full animate-bounce" />
                       <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                       <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />

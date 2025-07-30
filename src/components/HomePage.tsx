@@ -426,7 +426,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             })()}
 
             {/* Price and Product Info */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 mb-6">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 mb-8">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-white font-inter font-bold text-2xl">${selectedProductForPresentation.price}</span>
@@ -442,9 +442,49 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </motion.button>
               </div>
               
-              <div className="text-white/90 font-opensans text-sm mb-3">
+              <div className="text-white/90 font-opensans text-sm mb-3 relative">
                 <p>60 capsules • 30-day supply</p>
                 <p>500mg per capsule</p>
+                
+                {/* Add to Cart Button - Small and in bottom right corner of product info section */}
+                <div className="absolute bottom-0 right-0">
+                  <motion.button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      // Find the mushroom for this product
+                      const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
+                      if (mushroom) {
+                        await handleAddToCart(mushroom);
+                      } else {
+                        // Fallback: add the product directly
+                        onAddToCart(selectedProductForPresentation);
+                      }
+                    }}
+                    className="relative px-3 py-1.5 rounded-md bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl border border-white/30 shadow-md overflow-hidden group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {/* Liquid glass effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                    
+                    {/* Button content */}
+                    <div className="relative flex items-center gap-1.5 text-white">
+                      <ShoppingCart className="w-2.5 h-2.5" />
+                      <span className="font-opensans font-semibold text-xs">
+                        Add to Cart
+                      </span>
+                      <span className="font-inter font-bold text-xs text-vibrant-orange">
+                        ${selectedProductForPresentation.price}
+                      </span>
+                    </div>
+                    
+                    {/* Glass reflection */}
+                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-md" />
+                    
+                    {/* Bottom glow */}
+                    <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-vibrant-orange/30 blur-sm rounded-full" />
+                  </motion.button>
+                </div>
               </div>
 
               {showComposition && (
@@ -463,46 +503,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </ul>
                 </motion.div>
               )}
-
-              {/* Add to Cart Button - Small and in bottom right corner */}
-              <div className="mt-4 pt-3 border-t border-white/20 flex justify-end">
-                <motion.button
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    // Find the mushroom for this product
-                    const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
-                    if (mushroom) {
-                      await handleAddToCart(mushroom);
-                    } else {
-                      // Fallback: add the product directly
-                      onAddToCart(selectedProductForPresentation);
-                    }
-                  }}
-                  className="relative px-4 py-2 rounded-lg bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl border border-white/30 shadow-lg overflow-hidden group"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {/* Liquid glass effect overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-                  
-                  {/* Button content */}
-                  <div className="relative flex items-center gap-2 text-white">
-                    <ShoppingCart className="w-3 h-3" />
-                    <span className="font-opensans font-semibold text-sm">
-                      Add to Cart
-                    </span>
-                    <span className="font-inter font-bold text-sm text-vibrant-orange">
-                      ${selectedProductForPresentation.price}
-                    </span>
-                  </div>
-                  
-                  {/* Glass reflection */}
-                  <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-lg" />
-                  
-                  {/* Bottom glow */}
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2/3 h-2 bg-vibrant-orange/30 blur-md rounded-full" />
-                </motion.button>
-              </div>
             </div>
 
 
@@ -525,7 +525,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     return (
                     <div
                       key={index}
-                      className="flex items-center gap-2 px-3 py-2 bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-opensans font-medium rounded-full"
+                      className="flex items-center gap-2 px-3 py-2 text-white text-sm font-opensans font-medium"
                     >
                       <img 
                         src={category.icon} 
@@ -844,7 +844,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           style={{ touchAction: 'none' }}
         />
         
-        <h3 className="font-inter font-semibold text-white mb-2 text-center text-sm mt-4">
+        <h3 className="font-inter font-semibold text-vibrant-orange mb-2 text-center text-sm mt-4">
           Ask our AI for supplement advice
         </h3>
         
@@ -929,7 +929,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               >
                 {message.sender === 'bot' && (
                   <img 
-                    src="/Chatbot.png" 
+                    src="/Janus-Logo.png" 
                     alt="AI Assistant" 
                     className="w-8 h-8 flex-shrink-0"
                   />
@@ -966,7 +966,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           {isTyping && !isStreaming && (
             <div className="flex gap-3 justify-start">
               <img 
-                src="/Chatbot.png" 
+                src="/Janus-Logo.png" 
                 alt="AI Assistant" 
                 className="w-6 h-6 flex-shrink-0"
               />
