@@ -106,6 +106,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [isChatTyping, setIsChatTyping] = useState(false);
   const [selectedEffect, setSelectedEffect] = useState<string>('');
   const aiAssistantRef = useRef<HTMLDivElement>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
 
   const [completedArchetypes, setCompletedArchetypes] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -147,6 +148,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     loadStripeProducts();
   }, []);
+
+  // Auto-scroll for chat messages
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   // Helper function to get the associated product for a mushroom
   const getAssociatedProduct = (mushroomId: string): Product | null => {
@@ -727,7 +735,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
                 
                 {/* Chat Messages */}
-                <div className="overflow-y-auto space-y-4 mb-4 max-h-80 lg:flex-1 lg:overflow-y-auto">
+                <div className="overflow-y-auto space-y-4 mb-4 max-h-80 lg:flex-1 lg:overflow-y-auto" ref={chatMessagesRef}>
                   {chatMessages.map((message) => {
                     // Handle ad messages
                     if (message.sender === 'ad' && message.adData) {

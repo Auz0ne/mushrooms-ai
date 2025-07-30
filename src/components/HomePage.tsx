@@ -45,10 +45,18 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const desktopMessagesRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Auto-scroll for desktop messages
+  useEffect(() => {
+    if (desktopMessagesRef.current) {
+      desktopMessagesRef.current.scrollTop = desktopMessagesRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -1038,7 +1046,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             )}
 
             {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto mb-6 space-y-4">
+            <div className="flex-1 overflow-y-auto mb-6 space-y-4" ref={desktopMessagesRef}>
               {messages.map((message) => {
                 // Handle ad messages
                 if (message.sender === 'ad' && message.adData) {
