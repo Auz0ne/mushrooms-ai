@@ -11,6 +11,7 @@ export interface StripeProduct {
     mushroom_id: string;
     category: string;
     benefits: string;
+    product_id?: string; // Optional for backward compatibility
   };
 }
 
@@ -38,6 +39,7 @@ export class StripeProductService {
             mushroom_id: product.metadata.mushroom_id || '',
             category: product.metadata.category || '',
             benefits: product.metadata.benefits || '',
+            product_id: product.metadata.product_id || '',
           },
         };
       });
@@ -68,6 +70,7 @@ export class StripeProductService {
           mushroom_id: product.metadata.mushroom_id || '',
           category: product.metadata.category || '',
           benefits: product.metadata.benefits || '',
+          product_id: product.metadata.product_id || '',
         },
       };
     } catch (error) {
@@ -102,6 +105,7 @@ export class StripeProductService {
           mushroom_id: product.metadata.mushroom_id || '',
           category: product.metadata.category || '',
           benefits: product.metadata.benefits || '',
+          product_id: product.metadata.product_id || '',
         },
       };
     } catch (error) {

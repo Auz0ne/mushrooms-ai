@@ -130,6 +130,29 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
   };
 
+  // NEW: Handle adding actual product to cart
+  const handleAddToCart = async (mushroom: Mushroom) => {
+    try {
+      // Fetch the actual product associated with this mushroom
+      const product = await ProductService.getProductByMushroomId(mushroom.id);
+      
+      if (product) {
+        onAddToCart(product); // Add the actual Product object to cart
+        console.log('Added actual product to cart:', product.name);
+      } else {
+        console.error('No product found for mushroom:', mushroom.name);
+        // Fallback: use converted mushroom as product
+        const fallbackProduct = convertMushroomToProduct(mushroom);
+        onAddToCart(fallbackProduct);
+      }
+    } catch (error) {
+      console.error('Error fetching product for cart:', error);
+      // Fallback: use converted mushroom as product
+      const fallbackProduct = convertMushroomToProduct(mushroom);
+      onAddToCart(fallbackProduct);
+    }
+  };
+
   const displayProducts = mushrooms.map(convertMushroomToProduct);
   const currentProduct = displayProducts[currentProductIndex];
 
@@ -440,49 +463,49 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </ul>
                 </motion.div>
               )}
+
+              {/* Add to Cart Button - Small and in bottom right corner */}
+              <div className="mt-4 pt-3 border-t border-white/20 flex justify-end">
+                <motion.button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    // Find the mushroom for this product
+                    const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
+                    if (mushroom) {
+                      await handleAddToCart(mushroom);
+                    } else {
+                      // Fallback: add the product directly
+                      onAddToCart(selectedProductForPresentation);
+                    }
+                  }}
+                  className="relative px-4 py-2 rounded-lg bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl border border-white/30 shadow-lg overflow-hidden group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {/* Liquid glass effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                  
+                  {/* Button content */}
+                  <div className="relative flex items-center gap-2 text-white">
+                    <ShoppingCart className="w-3 h-3" />
+                    <span className="font-opensans font-semibold text-sm">
+                      Add to Cart
+                    </span>
+                    <span className="font-inter font-bold text-sm text-vibrant-orange">
+                      ${selectedProductForPresentation.price}
+                    </span>
+                  </div>
+                  
+                  {/* Glass reflection */}
+                  <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-lg" />
+                  
+                  {/* Bottom glow */}
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2/3 h-2 bg-vibrant-orange/30 blur-md rounded-full" />
+                </motion.button>
+              </div>
             </div>
 
-            {/* Add to Cart CTA Button */}
-            {/* Fixed Overlay Add to Cart Button - Positioned above chatbot */}
-            <div 
-              className="fixed left-1/2 transform -translate-x-1/2 z-40 px-4 transition-all duration-500 ease-out"
-              style={{
-                bottom: isDeployed ? 'calc(70vh + 24px)' : '204px' // 24px padding above chatbot
-              }}
-            >
-              <motion.button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToCart(selectedProductForPresentation);
-                }}
-                className="relative px-6 py-3 rounded-xl bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl border border-white/30 shadow-2xl overflow-hidden group min-w-[240px]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {/* Liquid glass effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-                
-                {/* Button content */}
-                <div className="relative flex items-center gap-2 text-white">
-                  <ShoppingCart className="w-4 h-4" />
-                  <span className="font-opensans font-semibold text-base">
-                    Add to Cart
-                  </span>
-                  <span className="font-inter font-bold text-lg text-vibrant-orange">
-                    ${selectedProductForPresentation.price}
-                  </span>
-                </div>
-                
-                {/* Glass reflection */}
-                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-xl" />
-                
-                {/* Bottom glow */}
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-3/4 h-4 bg-vibrant-orange/30 blur-lg rounded-full" />
-              </motion.button>
-            </div>
 
-            {/* Bottom padding to prevent button overlap */}
-            <div className="h-24"></div>
           </div>
         ) : (
           /* Original Product Card View */
@@ -697,9 +720,16 @@ export const HomePage: React.FC<HomePageProps> = ({
           }}
         >
           <motion.button
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              onAddToCart(currentProduct);
+              // Find the mushroom for this product
+              const mushroom = mushrooms.find(m => m.id === currentProduct.id);
+              if (mushroom) {
+                await handleAddToCart(mushroom);
+              } else {
+                // Fallback: add the product directly
+                onAddToCart(currentProduct);
+              }
             }}
             className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center"
             whileHover={{ scale: 1.05 }}

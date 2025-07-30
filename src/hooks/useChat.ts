@@ -37,10 +37,10 @@ export const useChat = () => {
 
     // Add a temporary bot message for streaming
     const tempBotMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),
+          id: (Date.now() + 1).toString(),
       content: '',
-      sender: 'bot',
-      timestamp: new Date(),
+          sender: 'bot',
+          timestamp: new Date(),
     };
 
     setMessages(prev => [...prev, tempBotMessage]);
@@ -118,7 +118,7 @@ export const useChat = () => {
                     chat_id: chatId,
                     ad_id: adResponse.data.ad.id,
                     impression_id: adResponse.data.impressionId,
-                    timestamp: new Date(),
+          timestamp: new Date(),
                   });
                 }
               } else if (adResponse?.status === 'success' && !adResponse.data) {

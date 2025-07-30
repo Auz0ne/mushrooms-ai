@@ -19,6 +19,7 @@ export interface Product {
   short_description?: string;
   certifications_notes?: string;
   mushroom_id?: string;
+  stripe_product_id?: string; // Direct mapping to Stripe product ID
 }
 
 export interface DatabaseProduct {
@@ -35,6 +36,7 @@ export interface DatabaseProduct {
   price: number;
   image_url: string;
   mushroom_id: string | null;
+  stripe_product_id: string | null; // Direct mapping to Stripe product ID
   created_at: string;
 }
 

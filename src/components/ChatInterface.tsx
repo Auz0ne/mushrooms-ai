@@ -82,48 +82,48 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             // Handle regular messages
             return (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className={`flex gap-3 ${
-                  message.sender === 'user' ? 'justify-end' : 'justify-start'
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className={`flex gap-3 ${
+                message.sender === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              {message.sender === 'bot' && (
+                <div className="w-8 h-8 bg-vibrant-orange rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+              )}
+
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                  message.sender === 'user'
+                    ? 'bg-vibrant-orange text-white'
+                    : 'bg-light-grey text-dark-matte'
                 }`}
               >
-                {message.sender === 'bot' && (
-                  <div className="w-8 h-8 bg-vibrant-orange rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                )}
-
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                <p className="font-opensans text-sm leading-relaxed">
+                  {message.content}
+                </p>
+                <p
+                  className={`text-xs mt-1 ${
                     message.sender === 'user'
-                      ? 'bg-vibrant-orange text-white'
-                      : 'bg-light-grey text-dark-matte'
+                      ? 'text-orange-100'
+                      : 'text-dark-grey'
                   }`}
                 >
-                  <p className="font-opensans text-sm leading-relaxed">
-                    {message.content}
-                  </p>
-                  <p
-                    className={`text-xs mt-1 ${
-                      message.sender === 'user'
-                        ? 'text-orange-100'
-                        : 'text-dark-grey'
-                    }`}
-                  >
-                    {formatTime(message.timestamp)}
-                  </p>
-                </div>
+                  {formatTime(message.timestamp)}
+                </p>
+              </div>
 
-                {message.sender === 'user' && (
-                  <div className="w-8 h-8 bg-dark-grey rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                )}
-              </motion.div>
+              {message.sender === 'user' && (
+                <div className="w-8 h-8 bg-dark-grey rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+              )}
+            </motion.div>
             );
           })}
         </AnimatePresence>

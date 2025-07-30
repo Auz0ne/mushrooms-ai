@@ -37,82 +37,105 @@ export async function POST(request: NextRequest) {
     const stripeProducts = await StripeProductService.getAllProducts();
     console.log('Available Stripe products:', stripeProducts.length);
     
-    // Map mushroom names to actual product names (from products table)
-    const mushroomToProductName: { [key: string]: string } = {
-      'reishi': 'Reishi Immune Calm',
-      'lion\'s mane': 'Lion\'s Mane Focus',
-      'lions mane': 'Lion\'s Mane Focus',
-      'cordyceps': 'Cordyceps Vitality',
-      'chaga': 'Chaga Antioxidant',
-      'maitake': 'Maitake Wellness',
-      'shiitake': 'Shiitake Digestive',
-      'turkey tail': 'Turkey Tail Defend',
-      'tremella': 'Tremella Beauty',
-      'agaricus blazei': 'Agaricus Blazei Protect',
-      'poria': 'Poria Serenity',
-      'king trumpet': 'King Trumpet Heart',
-      'enoki': 'Enoki Gut Health',
-      'oyster': 'Oyster Recovery',
-      'mesima': 'Mesima Defense'
-    };
-    
     const lineItems = cartItems.map((item: any) => {
-      console.log('Processing cart item:', item.product.name);
-      
-      // Use name-based matching to find the actual product name
-      const mushroomNameLower = item.product.name.toLowerCase();
-      const productName = mushroomToProductName[mushroomNameLower];
-      
-      console.log('Looking for Stripe product by name:', {
-        mushroomName: item.product.name,
-        mushroomNameLower,
-        productName
+      console.log('Processing cart item:', {
+        productId: item.product.id,
+        productName: item.product.name,
+        productPrice: item.product.price,
+        stripeProductId: item.product.stripe_product_id
       });
       
-      if (!productName) {
-        console.log('No mapping found for mushroom name:', item.product.name);
-        // Fallback to dynamic pricing
-        return {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: item.product.name,
-              description: item.product.description || `Premium ${item.product.name} supplement`,
-              images: [item.product.image],
-            },
-            unit_amount: Math.round(item.product.price * 100), // Convert to cents
-          },
-          quantity: item.quantity,
-        };
+      // Try to find Stripe product by stripe_product_id first (most direct mapping)
+      if (item.product.stripe_product_id) {
+        const stripeProduct = stripeProducts.find(sp => 
+          sp.id === item.product.stripe_product_id
+        );
+
+        if (stripeProduct) {
+          console.log('Found matching Stripe product by stripe_product_id:', stripeProduct.name);
+          return {
+            price: stripeProduct.priceId,
+            quantity: item.quantity,
+          };
+        }
       }
       
-      // Find matching Stripe product by actual product name
+      // Try to find Stripe product by product ID (when available)
       const stripeProduct = stripeProducts.find(sp => 
-        sp.name === productName
+        sp.metadata.product_id === item.product.id
       );
 
       if (stripeProduct) {
-        console.log('Found matching Stripe product for mushroom:', stripeProduct.name);
+        console.log('Found matching Stripe product by product ID:', stripeProduct.name);
         return {
           price: stripeProduct.priceId,
           quantity: item.quantity,
         };
-      } else {
-        console.log('No matching Stripe product found for mushroom, using dynamic pricing');
-        // Fallback to dynamic pricing for mushrooms
+      }
+      
+      // Fallback: try to find by mushroom_id (current Stripe products use this)
+      const stripeProductByMushroomId = stripeProducts.find(sp => 
+        sp.metadata.mushroom_id === item.product.mushroom_id
+      );
+
+      if (stripeProductByMushroomId) {
+        console.log('Found matching Stripe product by mushroom ID:', stripeProductByMushroomId.name);
         return {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: item.product.name,
-              description: item.product.description || `Premium ${item.product.name} supplement`,
-              images: [item.product.image],
-            },
-            unit_amount: Math.round(item.product.price * 100), // Convert to cents
-          },
+          price: stripeProductByMushroomId.priceId,
           quantity: item.quantity,
         };
       }
+      
+      // Fallback: try to find by mushroom name (for backward compatibility)
+      const mushroomToProductName: { [key: string]: string } = {
+        'reishi': 'Reishi Immune Calm',
+        'lion\'s mane': 'Lion\'s Mane Focus',
+        'lions mane': 'Lion\'s Mane Focus',
+        'cordyceps': 'Cordyceps Vitality',
+        'chaga': 'Chaga Antioxidant',
+        'maitake': 'Maitake Wellness',
+        'shiitake': 'Shiitake Digestive',
+        'turkey tail': 'Turkey Tail Defend',
+        'tremella': 'Tremella Beauty',
+        'agaricus blazei': 'Agaricus Blazei Protect',
+        'poria': 'Poria Serenity',
+        'king trumpet': 'King Trumpet Heart',
+        'enoki': 'Enoki Gut Health',
+        'oyster': 'Oyster Recovery',
+        'mesima': 'Mesima Defense'
+      };
+      
+      const mushroomNameLower = item.product.name.toLowerCase();
+      const productName = mushroomToProductName[mushroomNameLower];
+      
+      if (productName) {
+        const stripeProductByName = stripeProducts.find(sp => 
+          sp.name === productName
+        );
+
+        if (stripeProductByName) {
+          console.log('Found matching Stripe product by name:', stripeProductByName.name);
+          return {
+            price: stripeProductByName.priceId,
+            quantity: item.quantity,
+          };
+        }
+      }
+      
+      console.log('No matching Stripe product found, using dynamic pricing');
+      // Fallback to dynamic pricing
+      return {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.product.name,
+            description: item.product.description || `Premium ${item.product.name} supplement`,
+            images: [item.product.image],
+          },
+          unit_amount: Math.round(item.product.price * 100), // Convert to cents
+        },
+        quantity: item.quantity,
+      };
     });
 
     console.log('Line items created:', lineItems.length);

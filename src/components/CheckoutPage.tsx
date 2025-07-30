@@ -153,20 +153,30 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     return products.find(product => product.mushroom_id === mushroomId) || null;
   };
 
-  // Helper function to get Stripe product data for a mushroom
-  const getStripeProductForMushroom = (mushroomId: string) => {
-    console.log('Looking for Stripe product for mushroom ID:', mushroomId);
+  // Helper function to get Stripe product data for a product
+  const getStripeProductForProduct = (productId: string) => {
+    console.log('Looking for Stripe product for product ID:', productId);
     console.log('Available Stripe products:', stripeProducts.map(sp => ({
       name: sp.name,
+      product_id: sp.metadata.product_id,
       mushroom_id: sp.metadata.mushroom_id
     })));
     
-    const found = stripeProducts.find(sp => sp.metadata.mushroom_id === mushroomId);
+    const found = stripeProducts.find(sp => sp.metadata.product_id === productId);
     console.log('Found Stripe product:', found ? found.name : 'None');
     return found;
   };
 
-  // Helper function to get Stripe product data for a mushroom by name
+  // Helper function to get Stripe product data by stripe_product_id
+  const getStripeProductByStripeId = (stripeProductId: string) => {
+    console.log('Looking for Stripe product by stripe_product_id:', stripeProductId);
+    
+    const found = stripeProducts.find(sp => sp.id === stripeProductId);
+    console.log('Found Stripe product by stripe_product_id:', found ? found.name : 'None');
+    return found;
+  };
+
+  // Helper function to get Stripe product data for a mushroom by name (fallback)
   const getStripeProductForMushroomByName = (mushroomName: string) => {
     // Map mushroom names to Stripe product IDs
     const nameToStripeId: { [key: string]: string } = {
@@ -581,15 +591,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           <div className="space-y-3">
             {cartItems.map((item) => {
               console.log('Processing cart item:', {
-                mushroomId: item.product.id,
-                mushroomName: item.product.name,
-                mushroomPrice: item.product.price,
-                mushroomIdType: typeof item.product.id,
-                mushroomIdLength: item.product.id?.length
+                productId: item.product.id,
+                productName: item.product.name,
+                productPrice: item.product.price,
+                productIdType: typeof item.product.id,
+                productIdLength: item.product.id?.length
               });
               
-              // Try to find Stripe product by mushroom name instead of ID
-              const stripeProduct = getStripeProductForMushroomByName(item.product.name);
+              // Try to find Stripe product by stripe_product_id first, then product ID, then fallback to name
+              const stripeProduct = (item.product.stripe_product_id ? getStripeProductByStripeId(item.product.stripe_product_id) : null) || 
+                                   getStripeProductForProduct(item.product.id) || 
+                                   getStripeProductForMushroomByName(item.product.name);
               const displayName = stripeProduct?.name || item.product.name;
               const displayPrice = stripeProduct?.price || item.product.price;
               const displayImage = stripeProduct?.image || item.product.image;

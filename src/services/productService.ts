@@ -71,6 +71,29 @@ export class ProductService {
   }
 
   /**
+   * Get a single product by mushroom ID
+   */
+  static async getProductByMushroomId(mushroomId: string): Promise<Product | null> {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('mushroom_id', mushroomId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching product by mushroom:', error);
+        return null;
+      }
+
+      return data ? this.convertToProduct(data) : null;
+    } catch (error) {
+      console.error('Error in getProductByMushroomId:', error);
+      return null;
+    }
+  }
+
+  /**
    * Search products by name or description
    */
   static async searchProducts(query: string): Promise<Product[]> {
@@ -140,6 +163,7 @@ export class ProductService {
       short_description: dbProduct.short_description,
       certifications_notes: dbProduct.certifications_notes,
       mushroom_id: dbProduct.mushroom_id || undefined,
+      stripe_product_id: dbProduct.stripe_product_id || undefined,
     };
   }
 } 
