@@ -510,38 +510,6 @@ export const HomePage: React.FC<HomePageProps> = ({
         ) : (
           /* Original Product Card View */
           <div className="pb-4">
-            {/* Category Effects */}
-            <div className="mb-4 w-full">
-              <div className="flex flex-wrap justify-center gap-2">
-                {(() => {
-                  const mushroom = mushrooms.find(m => m.id === currentProduct.id);
-                  if (!mushroom) return null;
-
-                  const effects = mushroom.expected_effects || [];
-                  return effects.slice(0, 4).map((effect, index) => {
-                    const category = getCategoryForEffect(effect);
-                    if (!category) return null;
-
-                    return (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 px-3 py-2 text-white text-sm font-opensans font-medium"
-                    >
-                      <img
-                        src={category.icon}
-                        alt={effect}
-                        className="w-3 h-3"
-                      />
-                      <span className="truncate max-w-20 text-xs">
-                        {effect}
-                      </span>
-                    </div>
-                    );
-                  }).filter(Boolean);
-                })()}
-              </div>
-            </div>
-
             <div className="relative w-full mb-4" onTouchStart={(e) => {
               // This outer touch handler is removed to prevent interference
             }}>
@@ -694,14 +662,43 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </span>
                   </div>
 
-                  {/* Product Name */}
+                  {/* Effects Overlay */}
                   <div className="absolute bottom-12 left-3 right-16">
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {(() => {
+                        const mushroom = mushrooms.find(m => m.id === currentProduct.id);
+                        if (!mushroom) return null;
+
+                        const effects = mushroom.expected_effects || [];
+                        return effects.slice(0, 3).map((effect, index) => {
+                          const category = getCategoryForEffect(effect);
+                          if (!category) return null;
+
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center gap-1"
+                            >
+                              <img
+                                src={category.icon}
+                                alt={effect}
+                                className="w-2 h-2"
+                              />
+                              <span className="text-white/80 text-xs font-opensans">
+                                {effect}
+                              </span>
+                            </div>
+                          );
+                        }).filter(Boolean);
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Product Name */}
+                  <div className="absolute top-3 left-3 right-16">
                     <h2 className="text-white font-inter font-bold text-lg">
                       {currentProduct.name}
                     </h2>
-                    <p className="text-white/90 font-opensans text-xs mt-0.5 line-clamp-1">
-                      {currentProduct.description}
-                    </p>
                   </div>
                 </div>
                 </motion.div>
