@@ -29,15 +29,15 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showComposition, setShowComposition] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const { 
-    messages, 
-    isTyping, 
-    isStreaming, 
-    sendMessage, 
-    handleAdDismiss, 
-    handleAdClick 
+  const {
+    messages,
+    isTyping,
+    isStreaming,
+    sendMessage,
+    handleAdDismiss,
+    handleAdClick
   } = useChat();
-  
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -55,12 +55,12 @@ export const HomePage: React.FC<HomePageProps> = ({
           MushroomService.getAllMushrooms(),
           ProductService.getAllProducts()
         ]);
-        
+
         setMushrooms(mushroomsData);
         setProducts(productsData);
-        
+
         // Set Reishi as the default selected mushroom
-        const reishiIndex = mushroomsData.findIndex(mushroom => 
+        const reishiIndex = mushroomsData.findIndex(mushroom =>
           mushroom.name.toLowerCase().includes('reishi')
         );
         if (reishiIndex !== -1) {
@@ -83,9 +83,9 @@ export const HomePage: React.FC<HomePageProps> = ({
       const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(mobile);
     };
-    
+
     checkMobile();
-    
+
     // Handle visual viewport changes (keyboard appearance)
     const handleViewportChange = () => {
       if (typeof window !== 'undefined' && window.visualViewport) {
@@ -93,12 +93,12 @@ export const HomePage: React.FC<HomePageProps> = ({
         setKeyboardHeight(Math.max(0, keyboardHeight));
       }
     };
-    
+
     if (typeof window !== 'undefined' && window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportChange);
       handleViewportChange(); // Initial check
     }
-    
+
     return () => {
       if (typeof window !== 'undefined' && window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleViewportChange);
@@ -115,7 +115,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   // Convert mushroom to product format for display (keep all mushroom data, only update price)
   const convertMushroomToProduct = (mushroom: Mushroom): Product => {
     const productPrice = getProductPriceForMushroom(mushroom);
-    
+
     return {
       id: mushroom.id,
       name: mushroom.name,
@@ -135,7 +135,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     try {
       // Fetch the actual product associated with this mushroom
       const product = await ProductService.getProductByMushroomId(mushroom.id);
-      
+
       if (product) {
         onAddToCart(product); // Add the actual Product object to cart
         console.log('Added actual product to cart:', product.name);
@@ -157,13 +157,13 @@ export const HomePage: React.FC<HomePageProps> = ({
   const currentProduct = displayProducts[currentProductIndex];
 
   const handlePrevious = () => {
-    setCurrentProductIndex(prev => 
+    setCurrentProductIndex(prev =>
       prev > 0 ? prev - 1 : displayProducts.length - 1
     );
   };
 
   const handleNext = () => {
-    setCurrentProductIndex(prev => 
+    setCurrentProductIndex(prev =>
       prev < displayProducts.length - 1 ? prev + 1 : 0
     );
   };
@@ -216,7 +216,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const handleDragEnd = (event: any, info: any) => {
     const threshold = 80; // Minimum drag distance to trigger state change
-    
+
     if (info.offset.y < -threshold) {
       // Dragged up - deploy chatbot
       setIsDeployed(true);
@@ -251,7 +251,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             Mushrooms AI
           </h1>
         </div>
-        
+
         {/* Cart Button */}
         <motion.button
           onClick={onGoToCheckout}
@@ -272,7 +272,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       </header>
 
       {/* Product Card */}
-      <div 
+      <div
         className="px-4 pt-16 flex flex-col items-center justify-start"
         style={{
           height: isDeployed ? 'calc(30vh - 64px)' : 'calc(100vh - 180px)',
@@ -330,7 +330,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     Ask AI
                   </motion.button>
                 </div>
-                
+
                 {(() => {
                   const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation.id);
                   return (
@@ -381,7 +381,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               if (!mushroom || !mushroom.expected_effects) return null;
 
               const categorizedEffects = new Map<string, { category: any, effects: string[] }>();
-              
+
               mushroom.expected_effects.forEach(effect => {
                 const category = getCategoryForEffect(effect);
                 if (category) {
@@ -441,11 +441,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <Info className="w-4 h-4" />
                 </motion.button>
               </div>
-              
+
               <div className="text-white/90 font-opensans text-sm mb-3 relative">
                 <p>60 capsules • 30-day supply</p>
                 <p>500mg per capsule</p>
-                
+
                 {/* Add to Cart Button - Small and in bottom right corner of product info section */}
                 <div className="absolute bottom-0 right-0">
                   <motion.button
@@ -466,7 +466,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   >
                     {/* Liquid glass effect overlay */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-                    
+
                     {/* Button content */}
                     <div className="relative flex items-center gap-1.5 text-white">
                       <ShoppingCart className="w-2.5 h-2.5" />
@@ -477,10 +477,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                         ${selectedProductForPresentation.price}
                       </span>
                     </div>
-                    
+
                     {/* Glass reflection */}
                     <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-md" />
-                    
+
                     {/* Bottom glow */}
                     <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-vibrant-orange/30 blur-sm rounded-full" />
                   </motion.button>
@@ -516,19 +516,19 @@ export const HomePage: React.FC<HomePageProps> = ({
                 {(() => {
                   const mushroom = mushrooms.find(m => m.id === currentProduct.id);
                   if (!mushroom) return null;
-                  
+
                   const effects = mushroom.expected_effects || [];
                   return effects.slice(0, 4).map((effect, index) => {
                     const category = getCategoryForEffect(effect);
                     if (!category) return null;
-                    
+
                     return (
                     <div
                       key={index}
                       className="flex items-center gap-2 px-3 py-2 text-white text-sm font-opensans font-medium"
                     >
-                      <img 
-                        src={category.icon} 
+                      <img
+                        src={category.icon}
                         alt={effect}
                         className="w-3 h-3"
                       />
@@ -554,31 +554,31 @@ export const HomePage: React.FC<HomePageProps> = ({
                   const startTime = Date.now();
                   let hasMoved = false;
                   let isVerticalScroll = false;
-                  
+
                   const handleTouchMove = (moveEvent: TouchEvent) => {
                     const currentX = moveEvent.touches[0].clientX;
                     const currentY = moveEvent.touches[0].clientY;
                     const diffX = Math.abs(startX - currentX);
                     const diffY = Math.abs(startY - currentY);
-                    
+
                     // Determine if this is vertical scrolling
                     if (diffY > diffX && diffY > 10) {
                       isVerticalScroll = true;
                       return; // Allow vertical scrolling
                     }
-                    
+
                     if (diffX > 10 && !isVerticalScroll) { // If moved more than 10px horizontally, it's a swipe
                       hasMoved = true;
                       moveEvent.preventDefault();
                     }
                   };
-                  
+
                   const handleTouchEnd = (endEvent: TouchEvent) => {
                     const endX = endEvent.changedTouches[0].clientX;
                     const endTime = Date.now();
                     const diffX = startX - endX;
                     const timeDiff = endTime - startTime;
-                    
+
                     if (hasMoved && Math.abs(diffX) > 50 && !isVerticalScroll) {
                       // It's a swipe
                       if (diffX > 0) {
@@ -590,11 +590,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                       // It's a tap (no movement and quick)
                       handleProductTap(currentProduct);
                     }
-                    
+
                     document.removeEventListener('touchmove', handleTouchMove);
                     document.removeEventListener('touchend', handleTouchEnd);
                   };
-                  
+
                   document.addEventListener('touchmove', handleTouchMove, { passive: false });
                   document.addEventListener('touchend', handleTouchEnd);
                 }}
@@ -674,7 +674,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       className="w-full h-full object-cover rounded-2xl"
                     />
                   )}
-                  
+
                   {/* Fallback image using photo_url from database */}
                   {currentProduct.video && (
                     <img
@@ -683,7 +683,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       alt={currentProduct.name}
                     />
                   )}
-                  
+
                   {/* Overlays */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent rounded-2xl" />
 
@@ -736,9 +736,9 @@ export const HomePage: React.FC<HomePageProps> = ({
             whileTap={{ scale: 0.95 }}
             aria-label="Add to cart"
           >
-            <img 
-              src="/Cart-Button-Photoroom.png" 
-              alt="Add to cart" 
+            <img
+              src="/Cart-Button-Photoroom.png"
+              alt="Add to cart"
               className="w-12 h-12"
             />
           </motion.button>
@@ -746,7 +746,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       )}
 
       {/* Chatbot Section */}
-      <div 
+      <div
         className={`fixed left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
           isDeployed ? 'h-70dvh' : 'h-[180px]'
         } transition-all duration-500 ease-out`}
@@ -758,16 +758,16 @@ export const HomePage: React.FC<HomePageProps> = ({
           const target = e.target as HTMLElement;
           const messagesContainer = target.closest('.messages-container');
           if (messagesContainer) return; // Let messages scroll normally
-          
+
           e.stopPropagation();
           const startY = e.touches[0].clientY;
           let hasMoved = false;
-          
+
           const handleTouchMove = (moveEvent: TouchEvent) => {
             moveEvent.preventDefault();
             moveEvent.stopPropagation();
             const deltaY = moveEvent.touches[0].clientY - startY;
-            
+
             if (Math.abs(deltaY) > 30) {
               hasMoved = true;
               if (deltaY < 0 && !isDeployed) {
@@ -783,12 +783,12 @@ export const HomePage: React.FC<HomePageProps> = ({
               }
             }
           };
-          
+
           const handleTouchEnd = () => {
             document.removeEventListener('touchmove', handleTouchMove);
             document.removeEventListener('touchend', handleTouchEnd);
           };
-          
+
           document.addEventListener('touchmove', handleTouchMove, { passive: false });
           document.addEventListener('touchend', handleTouchEnd);
         }}
@@ -797,16 +797,16 @@ export const HomePage: React.FC<HomePageProps> = ({
           const target = e.target as HTMLElement;
           const messagesContainer = target.closest('.messages-container');
           if (messagesContainer) return; // Let messages scroll normally
-          
+
           e.stopPropagation();
           const startY = e.clientY;
           let hasMoved = false;
-          
+
           const handlePointerMove = (moveEvent: PointerEvent) => {
             moveEvent.preventDefault();
             moveEvent.stopPropagation();
             const deltaY = moveEvent.clientY - startY;
-            
+
             if (Math.abs(deltaY) > 30) {
               hasMoved = true;
               if (deltaY < 0 && !isDeployed) {
@@ -822,38 +822,54 @@ export const HomePage: React.FC<HomePageProps> = ({
               }
             }
           };
-          
+
           const handlePointerUp = () => {
             document.removeEventListener('pointermove', handlePointerMove);
             document.removeEventListener('pointerup', handlePointerUp);
           };
-          
+
           document.addEventListener('pointermove', handlePointerMove);
           document.addEventListener('pointerup', handlePointerUp);
         }}
       >
         {/* Extended Drag Area - Invisible hit box above the chatbot */}
-        <div 
+        <div
           className="absolute -top-8 left-0 right-0 h-8 cursor-ns-resize"
           style={{ touchAction: 'none' }}
         />
-        
+
         {/* Drag Handle */}
-        <div 
+        <div
           className="absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white/40 rounded-full mb-2 cursor-ns-resize"
           style={{ touchAction: 'none' }}
         />
-        
+
         <h3 className="font-inter font-semibold text-vibrant-orange mb-2 text-center text-sm mt-4">
           Ask our AI for supplement advice
         </h3>
-        
+
         {/* Chat Messages */}
         <div
           ref={messagesContainerRef}
           className="messages-container flex-1 overflow-y-auto space-y-4 mb-2 mt-2 min-h-0"
           style={{ touchAction: 'pan-y' }}
         >
+          {/* Permanent Chatbot Icon */}
+          {messages.length === 0 && (
+            <div className="flex gap-3 justify-start">
+              <img
+                src="/Janus-Logo.png"
+                alt="AI Assistant"
+                className="w-8 h-8 flex-shrink-0"
+              />
+              <div className="max-w-[80%]">
+                <div className="text-white/50 font-opensans text-xs">
+                  AI Assistant ready to help
+                </div>
+              </div>
+            </div>
+          )}
+
           {(() => {
             const displayMessages = messages.slice(-10);
             console.log('Total messages:', messages.length);
@@ -899,12 +915,12 @@ export const HomePage: React.FC<HomePageProps> = ({
                               }
                             }}
                             className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-opensans font-semibold py-1 px-3 rounded text-xs"
-                            whileHover={{ 
+                            whileHover={{
                               scale: 1.05,
                               boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
                               transition: { duration: 0.2 }
                             }}
-                            whileTap={{ 
+                            whileTap={{
                               scale: 0.95,
                               transition: { duration: 0.1 }
                             }}
@@ -928,9 +944,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                 }`}
               >
                 {message.sender === 'bot' && (
-                  <img 
-                    src="/Janus-Logo.png" 
-                    alt="AI Assistant" 
+                  <img
+                    src="/Janus-Logo.png"
+                    alt="AI Assistant"
                     className="w-8 h-8 flex-shrink-0"
                   />
                 )}
@@ -952,9 +968,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
 
                 {message.sender === 'user' && (
-                  <img 
-                    src="/User.png" 
-                    alt="User" 
+                  <img
+                    src="/User.png"
+                    alt="User"
                     className="w-8 h-8 flex-shrink-0"
                   />
                 )}
@@ -962,23 +978,6 @@ export const HomePage: React.FC<HomePageProps> = ({
             );
           })}
 
-          {/* Typing Indicator */}
-          {isTyping && !isStreaming && (
-            <div className="flex gap-3 justify-start">
-              <img 
-                src="/Janus-Logo.png" 
-                alt="AI Assistant" 
-                className="w-6 h-6 flex-shrink-0"
-              />
-              <div className="max-w-[80%]">
-                <div className="flex gap-1 drop-shadow-sm">
-                  <div className="w-1 h-1 bg-white rounded-full animate-bounce" />
-                  <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                </div>
-              </div>
-            </div>
-          )}
           <div ref={messagesEndRef} />
         </div>
 

@@ -33,7 +33,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="theme-color" content="#ff6b35" />
+        <meta name="theme-color" content="#1a1a1a" />
       </head>
       <body className={`${inter.variable} ${openSans.variable} font-opensans`}>
         <Toaster />

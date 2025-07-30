@@ -1,23 +1,56 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChatMessage, Mushroom, Product, CartItem, AdMessage } from '../types';
 import { ChatGPTService, ChatContext } from '../services/chatGPTService';
 import { ThradsAdService } from '../services/thradsAdService';
 
-export const useChat = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      content: "Hi there! 👋 I'm your AI mushroom supplement advisor. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?",
-      sender: 'bot',
-      timestamp: new Date(),
-    }
-  ]);
+const WELCOME_MESSAGE = "Hi there! 👋 I'm your AI mushroom supplement advisor. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?";
 
+export const useChat = (isDeployed: boolean = false) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [chatId] = useState(() => `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [userId] = useState(() => `user_${Math.random().toString(36).substr(2, 9)}`);
   const [conversationTurn, setConversationTurn] = useState(0);
+  const [welcomeStarted, setWelcomeStarted] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Progressive welcome message logic
+  const startWelcomeMessage = useCallback(() => {
+    if (welcomeStarted || messages.length > 0) return;
+    setWelcomeStarted(true);
+    setIsTyping(true);
+    const id = Date.now().toString();
+    setMessages([{ id, content: '', sender: 'bot', timestamp: new Date() }]);
+    let i = 0;
+    function typeNext() {
+      i++;
+      setMessages([{ id, content: WELCOME_MESSAGE.slice(0, i), sender: 'bot', timestamp: new Date() }]);
+      if (i < WELCOME_MESSAGE.length) {
+        typingTimeoutRef.current = setTimeout(typeNext, 18);
+      } else {
+        setIsTyping(false);
+      }
+    }
+    typeNext();
+  }, [welcomeStarted, messages.length]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Trigger welcome message when component first appears (not when deployed)
+    if (!welcomeStarted && messages.length === 0) {
+      // Small delay to ensure component is fully rendered
+      const timer = setTimeout(() => {
+        startWelcomeMessage();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [welcomeStarted, messages.length, startWelcomeMessage]);
 
   const sendMessage = useCallback((
     content: string, 

@@ -793,23 +793,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
               ))}
 
-              {/* Typing Indicator */}
-              {isChatTyping && (
-                <div className="flex gap-3 justify-start">
-                  <img 
-                    src="/Janus-Logo.png" 
-                    alt="AI Assistant" 
-                    className="w-6 h-6 flex-shrink-0"
-                  />
-                  <div className="max-w-[80%]">
-                    <div className="flex gap-1 drop-shadow-sm">
-                      <div className="w-1 h-1 bg-white rounded-full animate-bounce" />
-                      <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                      <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Text Input */}
