@@ -496,9 +496,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-black relative">
+    <div className="min-h-screen bg-black relative lg:h-screen lg:overflow-hidden">
       {/* Header */}
-      <header className="p-4">
+      <header className="p-4 lg:flex-shrink-0">
         <div className="flex items-center gap-4">
           <motion.button
             onClick={onGoBack}
@@ -512,318 +512,306 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         </div>
       </header>
 
-      <div className="p-4 space-y-6">
-        {/* Completed Archetypes Badges */}
-        {completedArchetypes.length > 0 && (
-          <div className="mx-4 mb-6 p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg">
-            <div className="flex flex-wrap gap-3 justify-start">
-              {completedArchetypes.map((archetypeName) => {
-                // Map archetype names to their icons
-                const archetypeIcons: Record<string, string> = {
-                  'Mentalist': '/compressed_Brain-Photoroom.png',
-                  'Guardian': '/compressed_Shield-Photoroom.png',
-                  'Athlete': '/compressed_Lightning-Photoroom.png',
-                  'Radiant': '/compressed_Lotus-Photoroom.png',
-                  'Zen Seeker': '/compressed_Spiral-Photoroom.png',
-                  'Gut Guru': '/compressed_Drop-Photoroom.png',
-                };
-                
-                const archetypeIcon = archetypeIcons[archetypeName] || '/compressed_Spiral-Photoroom.png';
-                
-                return (
-                  <motion.div
-                    key={archetypeName}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center gap-2 p-3"
-                  >
-                    <img src={archetypeIcon} alt={archetypeName} className="w-8 h-8" />
-                    <span className="text-white font-opensans font-semibold text-xs text-center">
-                      {archetypeName}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+      {/* Desktop Layout - Two Columns */}
+      <div className="lg:flex lg:h-[calc(100vh-80px)] lg:pt-0">
+        {/* Left Column - Effects, Badges, and Promotions - Scrollable */}
+        <div className="lg:w-1/2 lg:px-8 lg:overflow-y-auto lg:h-full lg:pt-0">
+          <div className="p-4 space-y-6 lg:p-0 lg:h-full lg:overflow-y-auto lg:pt-0 lg:pb-16">
 
-        {/* Your Enhanced Self */}
-        {categoryScores.length > 0 && (
-          <div className="p-4">
-            <h2 className="font-inter font-semibold text-white mb-4">Your Enhanced Self</h2>
-            <div className="space-y-3">
-              {categoryScores.map((category) => (
-                <div key={category.name}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <img src={category.icon} alt={category.name} className="w-5 h-5" />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-white font-opensans text-sm">{category.name}</span>
+
+            {/* Your Enhanced Self */}
+            {categoryScores.length > 0 && (
+              <div className="p-4">
+                <h2 className="font-inter font-semibold text-white mb-4">Your Enhanced Self</h2>
+                <div className="space-y-3">
+                  {categoryScores.map((category) => (
+                    <div key={category.name}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <img src={category.icon} alt={category.name} className="w-5 h-5" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-white font-opensans text-sm">{category.name}</span>
+                          </div>
+                          <div className="bg-white/20 rounded-full h-2">
+                            <div 
+                              className="bg-gradient-to-r from-vibrant-orange to-yellow-500 h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${(category.score / category.maxScore) * 100}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="bg-white/20 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-vibrant-orange to-yellow-500 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${(category.score / category.maxScore) * 100}%` }}
-                        />
+                      
+                      {/* Effects from mushrooms in this category */}
+                      <div className="ml-8 space-y-2 mt-3">
+                        {(() => {
+                          const effectsInCategory: { effect: string; mushroomName: string }[] = [];
+                          
+                          cartItems.forEach(item => {
+                            const productName = item.product.name;
+                            const mushroomName = getMushroomNameFromProduct(productName);
+                            const effects = getMushroomEffects(mushroomName);
+
+                            effects.forEach(effect => {
+                              const effectCategory = getCategoryForEffect(effect);
+                              if (effectCategory && effectCategory.name === category.name) {
+                                effectsInCategory.push({ effect, mushroomName });
+                              }
+                            });
+                          });
+
+                          return effectsInCategory.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between py-2">
+                              <div className="flex items-center gap-3">
+                                <span className="text-white/90 font-opensans text-sm capitalize bg-white/5 px-3 py-1 rounded-full">
+                                  {item.effect}
+                                </span>
+                                <span className="text-white/60 font-opensans text-xs bg-white/5 px-2 py-1 rounded-full">
+                                  from {item.mushroomName}
+                                </span>
+                              </div>
+                              <motion.button
+                                onClick={() => handleAskAI(item.effect, item.mushroomName)}
+                                className="px-3 py-1 bg-vibrant-orange/80 hover:bg-vibrant-orange text-white text-xs font-opensans font-medium rounded-full"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                Ask AI
+                              </motion.button>
+                            </div>
+                          ));
+                        })()}
                       </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Promotion Section */}
+            <Promotion 
+              cartItems={cartItems}
+              onAddProducts={handleAddProducts}
+              products={products}
+            />
+          </div>
+        </div>
+
+        {/* Right Column - Cart and Checkout - Fixed */}
+        <div className="lg:w-1/2 lg:px-8 lg:overflow-hidden lg:h-full lg:pt-0 lg:pb-8">
+          <div className="p-4 space-y-6 lg:p-0 lg:h-full lg:flex lg:flex-col lg:overflow-hidden lg:pt-0 lg:pb-8">
+            {/* Shopping List */}
+            <div className="p-4 lg:flex-shrink-0">
+              <h2 className="font-inter font-semibold text-white mb-4">Your Supplements</h2>
+              <div className="space-y-3">
+                {cartItems.map((item) => {
+                  console.log('Processing cart item:', {
+                    productId: item.product.id,
+                    productName: item.product.name,
+                    productPrice: item.product.price,
+                    productIdType: typeof item.product.id,
+                    productIdLength: item.product.id?.length
+                  });
                   
-                  {/* Effects from mushrooms in this category */}
-                  <div className="ml-8 space-y-2 mt-3">
-                    {(() => {
-                      const effectsInCategory: { effect: string; mushroomName: string }[] = [];
+                  // Try to find Stripe product by stripe_product_id first, then product ID, then fallback to name
+                  const stripeProduct = (item.product.stripe_product_id ? getStripeProductByStripeId(item.product.stripe_product_id) : null) || 
+                                       getStripeProductForProduct(item.product.id) || 
+                                       getStripeProductForMushroomByName(item.product.name);
+                  const displayName = stripeProduct?.name || item.product.name;
+                  const displayPrice = stripeProduct?.price || item.product.price;
+                  const displayImage = stripeProduct?.image || item.product.image;
+                  
+                  console.log('Display data:', {
+                    displayName,
+                    displayPrice,
+                    displayImage,
+                    hasStripeProduct: !!stripeProduct
+                  });
+                  
+                  return (
+                    <motion.div 
+                      key={item.product.id} 
+                      className="flex items-center gap-3 bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors"
+                      onClick={() => console.log('Navigate to product:', displayName)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <img
+                        src={displayImage}
+                        alt={displayName}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
                       
-                      cartItems.forEach(item => {
-                        const productName = item.product.name;
-                        const mushroomName = getMushroomNameFromProduct(productName);
-                        const effects = getMushroomEffects(mushroomName);
+                      <div className="flex-1">
+                        <h3 className="font-inter font-semibold text-white text-sm">{displayName}</h3>
+                        <p className="text-vibrant-orange font-opensans font-semibold text-sm">${displayPrice}</p>
+                      </div>
 
-                        effects.forEach(effect => {
-                          const effectCategory = getCategoryForEffect(effect);
-                          if (effectCategory && effectCategory.name === category.name) {
-                            effectsInCategory.push({ effect, mushroomName });
-                          }
-                        });
-                      });
+                      <div className="flex items-center gap-2">
+                        <motion.button
+                          onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </motion.button>
+                        
+                        <span className="w-6 text-center font-opensans font-semibold text-white text-sm">
+                          {item.quantity}
+                        </span>
+                        
+                        <motion.button
+                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </motion.button>
+                      </div>
 
-                      return effectsInCategory.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between py-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-white/90 font-opensans text-sm capitalize bg-white/5 px-3 py-1 rounded-full">
-                              {item.effect}
-                            </span>
-                            <span className="text-white/60 font-opensans text-xs bg-white/5 px-2 py-1 rounded-full">
-                              from {item.mushroomName}
-                            </span>
-                          </div>
-                          <motion.button
-                            onClick={() => handleAskAI(item.effect, item.mushroomName)}
-                            className="px-3 py-1 bg-vibrant-orange/80 hover:bg-vibrant-orange text-white text-xs font-opensans font-medium rounded-full"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            Ask AI
-                          </motion.button>
-                        </div>
-                      ));
-                    })()}
+                      <motion.button
+                        onClick={() => onRemoveItem(item.product.id)}
+                        className="p-1 rounded-full hover:bg-red-500/20 text-red-400"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </motion.button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="p-4 lg:flex-shrink-0">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-opensans text-white/80">Subtotal:</span>
+                  <span className="font-opensans font-semibold text-white">${cartTotal.toFixed(2)}</span>
+                </div>
+                {getDiscountAmount() > 0 && (
+                  <div className="flex justify-between">
+                    <span className="font-opensans text-green-400">Archetype Discount:</span>
+                    <span className="font-opensans font-semibold text-green-400">-${getDiscountAmount().toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="border-t border-white/20 pt-2">
+                  <div className="flex justify-between">
+                    <span className="font-inter font-bold text-lg text-white">Total:</span>
+                    <span className="font-inter font-bold text-xl text-vibrant-orange">${finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Promotion Section */}
-        <Promotion 
-          cartItems={cartItems}
-          onAddProducts={handleAddProducts}
-          products={products}
-        />
-
-        {/* Shopping List */}
-        <div className="p-4">
-          <h2 className="font-inter font-semibold text-white mb-4">Your Supplements</h2>
-          <div className="space-y-3">
-            {cartItems.map((item) => {
-              console.log('Processing cart item:', {
-                productId: item.product.id,
-                productName: item.product.name,
-                productPrice: item.product.price,
-                productIdType: typeof item.product.id,
-                productIdLength: item.product.id?.length
-              });
-              
-              // Try to find Stripe product by stripe_product_id first, then product ID, then fallback to name
-              const stripeProduct = (item.product.stripe_product_id ? getStripeProductByStripeId(item.product.stripe_product_id) : null) || 
-                                   getStripeProductForProduct(item.product.id) || 
-                                   getStripeProductForMushroomByName(item.product.name);
-              const displayName = stripeProduct?.name || item.product.name;
-              const displayPrice = stripeProduct?.price || item.product.price;
-              const displayImage = stripeProduct?.image || item.product.image;
-              
-              console.log('Display data:', {
-                displayName,
-                displayPrice,
-                displayImage,
-                hasStripeProduct: !!stripeProduct
-              });
-              
-              return (
-                <motion.div 
-                  key={item.product.id} 
-                  className="flex items-center gap-3 bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors"
-                  onClick={() => console.log('Navigate to product:', displayName)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <img
-                    src={displayImage}
-                    alt={displayName}
-                    className="w-12 h-12 rounded-lg object-cover"
-                  />
-                  
-                  <div className="flex-1">
-                    <h3 className="font-inter font-semibold text-white text-sm">{displayName}</h3>
-                    <p className="text-vibrant-orange font-opensans font-semibold text-sm">${displayPrice}</p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <motion.button
-                      onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                      className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Minus className="w-3 h-3" />
-                    </motion.button>
-                    
-                    <span className="w-6 text-center font-opensans font-semibold text-white text-sm">
-                      {item.quantity}
-                    </span>
-                    
-                    <motion.button
-                      onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                      className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </motion.button>
-                  </div>
-
+            {/* AI Assistant Section */}
+            {showChatbot && (
+              <div ref={aiAssistantRef} className="px-4 mt-2 lg:flex-1 lg:overflow-hidden lg:flex lg:flex-col">
+                <div className="flex items-center justify-between mb-4 lg:flex-shrink-0">
+                  <h3 className="font-inter font-semibold text-white text-lg">
+                    Ask our AI for supplement advice
+                  </h3>
                   <motion.button
-                    onClick={() => onRemoveItem(item.product.id)}
-                    className="p-1 rounded-full hover:bg-red-500/20 text-red-400"
+                    onClick={() => setShowChatbot(false)}
+                    className="p-1 rounded-full hover:bg-white/20 text-white/60"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <X className="w-4 h-4" />
                   </motion.button>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+                </div>
+                
+                {/* Chat Messages */}
+                <div className="overflow-y-auto space-y-4 mb-4 max-h-80 lg:flex-1 lg:overflow-y-auto">
+                  {chatMessages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 ${
+                        message.sender === 'user' ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      {message.sender === 'bot' && (
+                        <img 
+                          src="/Janus-Logo.png" 
+                          alt="AI Assistant" 
+                          className="w-8 h-8 flex-shrink-0"
+                        />
+                      )}
 
-      {/* Checkout Information and AI Assistant Block */}
-      <div className="pb-24">
-        {/* Order Summary */}
-        <div className="p-4">
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="font-opensans text-white/80">Subtotal:</span>
-              <span className="font-opensans font-semibold text-white">${cartTotal.toFixed(2)}</span>
-            </div>
-            {getDiscountAmount() > 0 && (
-              <div className="flex justify-between">
-                <span className="font-opensans text-green-400">Archetype Discount:</span>
-                <span className="font-opensans font-semibold text-green-400">-${getDiscountAmount().toFixed(2)}</span>
-              </div>
-            )}
-            <div className="border-t border-white/20 pt-2">
-              <div className="flex justify-between">
-                <span className="font-inter font-bold text-lg text-white">Total:</span>
-                <span className="font-inter font-bold text-xl text-vibrant-orange">${finalTotal.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+                      <div className="max-w-[80%]">
+                        <div className={`font-opensans text-xs leading-snug drop-shadow-sm ${
+                          message.sender === 'user' ? 'text-vibrant-orange font-semibold' : 'text-white'
+                        }`}>
+                          {message.sender === 'bot' ? (
+                            message.content.split('\n').map((paragraph, index) => (
+                              <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                                {paragraph}
+                              </p>
+                            ))
+                          ) : (
+                            <p>{message.content}</p>
+                          )}
+                        </div>
+                      </div>
 
-        {/* AI Assistant Section - Full Width */}
-        {showChatbot && (
-          <div ref={aiAssistantRef} className="px-4 mt-2">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-inter font-semibold text-white text-lg">
-                Ask our AI for supplement advice
-              </h3>
-              <motion.button
-                onClick={() => setShowChatbot(false)}
-                className="p-1 rounded-full hover:bg-white/20 text-white/60"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <X className="w-4 h-4" />
-              </motion.button>
-            </div>
-            
-            {/* Chat Messages */}
-            <div className="overflow-y-auto space-y-4 mb-4 max-h-80">
-              {chatMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${
-                    message.sender === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  {message.sender === 'bot' && (
-                    <img 
-                      src="/Janus-Logo.png" 
-                      alt="AI Assistant" 
-                      className="w-8 h-8 flex-shrink-0"
-                    />
-                  )}
-
-                  <div className="max-w-[80%]">
-                    <div className={`font-opensans text-xs leading-snug drop-shadow-sm ${
-                      message.sender === 'user' ? 'text-vibrant-orange font-semibold' : 'text-white'
-                    }`}>
-                      {message.sender === 'bot' ? (
-                        message.content.split('\n').map((paragraph, index) => (
-                          <p key={index} className={index > 0 ? 'mt-2' : ''}>
-                            {paragraph}
-                          </p>
-                        ))
-                      ) : (
-                        <p>{message.content}</p>
+                      {message.sender === 'user' && (
+                        <img 
+                          src="/User.png" 
+                          alt="User" 
+                          className="w-8 h-8 flex-shrink-0"
+                        />
                       )}
                     </div>
-                  </div>
+                  ))}
 
-                  {message.sender === 'user' && (
-                    <img 
-                      src="/User.png" 
-                      alt="User" 
-                      className="w-8 h-8 flex-shrink-0"
-                    />
-                  )}
                 </div>
-              ))}
 
-            </div>
-
-            {/* Text Input */}
-            <form onSubmit={(e) => { e.preventDefault(); handleSendChatMessage(); }} className="flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask about supplements..."
-                className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-3 py-1.5 text-white placeholder-white/70 font-opensans text-sm focus:outline-none focus:ring-2 focus:ring-vibrant-orange"
-                disabled={isChatTyping}
-              />
-              <motion.button
-                type="submit"
-                disabled={!chatInput.trim() || isChatTyping}
-                className="w-10 h-10 bg-vibrant-orange hover:bg-orange-600 disabled:bg-dark-grey disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Send className="w-4 h-4" />
-              </motion.button>
-            </form>
+                {/* Text Input */}
+                <form onSubmit={(e) => { e.preventDefault(); handleSendChatMessage(); }} className="flex gap-2 lg:flex-shrink-0">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask about supplements..."
+                    className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-3 py-1.5 text-white placeholder-white/70 font-opensans text-sm focus:outline-none focus:ring-2 focus:ring-vibrant-orange"
+                    disabled={isChatTyping}
+                  />
+                  <motion.button
+                    type="submit"
+                    disabled={!chatInput.trim() || isChatTyping}
+                    className="w-10 h-10 bg-vibrant-orange hover:bg-orange-600 disabled:bg-dark-grey disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Send className="w-4 h-4" />
+                  </motion.button>
+                </form>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Fixed Checkout Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-dark-matte/95 backdrop-blur-sm border-t border-white/20">
+      {/* Mobile Checkout Button - Hidden on desktop */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-dark-matte/95 backdrop-blur-sm border-t border-white/20">
         <motion.button
           onClick={handleStripePayment}
           className="w-full bg-vibrant-orange hover:bg-orange-600 text-white font-opensans font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-vibrant-orange focus:ring-offset-2"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <CreditCard className="w-5 h-5" />
+          Complete Purchase - ${finalTotal.toFixed(2)}
+        </motion.button>
+      </div>
+
+      {/* Desktop Checkout Button - Centered in right column */}
+      <div className="hidden lg:block fixed bottom-8 right-1/4 transform translate-x-1/2">
+        <motion.button
+          onClick={handleStripePayment}
+          className="bg-vibrant-orange hover:bg-orange-600 text-white font-opensans font-semibold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-vibrant-orange focus:ring-offset-2 shadow-lg"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >

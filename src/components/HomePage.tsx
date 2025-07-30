@@ -5,6 +5,7 @@ import { Product, Mushroom } from '../types';
 import { MushroomService } from '../services/mushroomService';
 import { ProductService } from '../services/productService';
 import { useChat } from '../hooks/useChat';
+import { useScreenSize } from '../hooks/useScreenSize';
 import { getCategoriesForMushroom, getCategoryForEffect } from '../utils/categoryIcons';
 
 interface HomePageProps {
@@ -29,6 +30,10 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showComposition, setShowComposition] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Use responsive screen size hook
+  const { isDesktop } = useScreenSize();
+  
   const {
     messages,
     isTyping,
@@ -244,7 +249,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div 
-      className="min-h-dvh bg-black flex flex-col"
+      className="min-h-dvh bg-black flex flex-col lg:flex-row"
       style={{
         overflow: 'hidden',
         touchAction: 'none',
@@ -281,9 +286,276 @@ export const HomePage: React.FC<HomePageProps> = ({
         </motion.button>
       </header>
 
-      {/* Product Card */}
+      {/* Desktop Product Display - Only visible on large screens */}
+      <div className="hidden lg:flex lg:w-1/3 lg:h-screen lg:items-start lg:justify-center lg:pt-16">
+        <div className="w-full max-w-lg mx-auto px-8 pt-8">
+          {!showProductPresentation ? (
+            /* Product Card View */
+            <div className="relative">
+              {/* Product Image - Fixed cropping and positioning */}
+              <div 
+                className="w-full h-[500px] rounded-2xl overflow-hidden relative shadow-2xl cursor-pointer"
+                onClick={() => handleProductTap(currentProduct)}
+              >
+                {currentProduct.video ? (
+                  <video
+                    src={currentProduct.video}
+                    className="w-full h-full object-cover object-center"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={currentProduct.image}
+                    alt={currentProduct.name}
+                    className="w-full h-full object-cover object-center"
+                  />
+                )}
+
+                {/* Product Name - Top left overlay */}
+                <div className="absolute top-4 left-4">
+                  <h2 className="text-white font-inter font-bold text-2xl drop-shadow-lg">
+                    {currentProduct.name}
+                  </h2>
+                </div>
+
+                {/* Effects - Above description */}
+                <div className="absolute bottom-36 left-4 flex flex-wrap gap-2">
+                  {currentProduct.benefits?.slice(0, 3).map((effect, index) => {
+                    const category = getCategoryForEffect(effect);
+                    return (
+                      <div key={index} className="flex items-center gap-1">
+                        {category && (
+                          <img src={category.icon} alt={category.name} className="w-3 h-3" />
+                        )}
+                        <span className="text-white text-xs font-opensans">{effect}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Description - Between effects and price */}
+                <div className="absolute bottom-16 left-4 max-w-xs">
+                  <p className="text-white text-sm font-opensans leading-relaxed drop-shadow-lg">
+                    {currentProduct.description}
+                  </p>
+                </div>
+
+                {/* Price Tag - Bottom left */}
+                <div className="absolute bottom-4 left-4 bg-vibrant-orange text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                  ${currentProduct.price}
+                </div>
+              </div>
+
+              {/* Desktop Cart Button - Under the product card */}
+              <div className="mt-6 flex justify-end">
+                <motion.button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    // Find the mushroom for this product
+                    const mushroom = mushrooms.find(m => m.id === currentProduct.id);
+                    if (mushroom) {
+                      await handleAddToCart(mushroom);
+                    } else {
+                      // Fallback: add the product directly
+                      onAddToCart(currentProduct);
+                    }
+                  }}
+                  className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="Add to cart"
+                >
+                  <img
+                    src="/Cart-Button-Photoroom.png"
+                    alt="Add to cart"
+                    className="w-12 h-12"
+                  />
+                </motion.button>
+              </div>
+            </div>
+          ) : (
+            /* Detailed Product Information View */
+            <div className="w-full space-y-6">
+              {/* Back Button */}
+              <motion.button
+                onClick={handleBackToProducts}
+                className="p-2 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.button>
+
+              {/* Product Image and Basic Info */}
+              <div className="flex gap-4">
+                <div className="w-24 h-24 flex-shrink-0">
+                  {selectedProductForPresentation?.video ? (
+                    <video
+                      src={selectedProductForPresentation.video}
+                      className="w-full h-full object-cover rounded-xl"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={selectedProductForPresentation?.image}
+                      alt={selectedProductForPresentation?.name}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <div className="flex items-start justify-between mb-2">
+                    <h2 className="text-white font-inter font-bold text-xl flex-1">
+                      {selectedProductForPresentation?.name}
+                    </h2>
+                    <motion.button
+                      onClick={() => handleAskAI(selectedProductForPresentation?.name || '')}
+                      className="ml-2 px-2 py-1 bg-vibrant-orange/80 hover:bg-vibrant-orange text-white text-xs font-opensans font-medium rounded-full flex items-center gap-1"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Bot className="w-3 h-3" />
+                      Ask AI
+                    </motion.button>
+                  </div>
+
+                  {(() => {
+                    const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation?.id);
+                    return (
+                      <div className="space-y-2">
+                        {mushroom?.scientific_name && (
+                          <p className="text-white/80 font-opensans text-xs italic">
+                            {mushroom.scientific_name}
+                          </p>
+                        )}
+                        {mushroom?.region_medicine && (
+                          <div className="flex items-start justify-between">
+                            <p className="text-white/80 font-opensans text-xs flex-1">
+                              Traditional use: {mushroom.region_medicine}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              
+
+              {/* Effects by Category */}
+              <div>
+                <h3 className="text-white font-inter font-bold text-lg mb-3">Effects by Category</h3>
+                <div className="space-y-3">
+                  {(() => {
+                    const effects = selectedProductForPresentation?.benefits?.slice(0, 3) || [];
+                    const groupedEffects = effects.reduce((acc, effect) => {
+                      const category = getCategoryForEffect(effect);
+                      if (category) {
+                        if (!acc[category.name]) {
+                          acc[category.name] = {
+                            category,
+                            effects: []
+                          };
+                        }
+                        acc[category.name].effects.push(effect);
+                      }
+                      return acc;
+                    }, {} as Record<string, { category: any, effects: string[] }>);
+
+                    return Object.values(groupedEffects).map((group, index) => (
+                      <div key={index} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <img src={group.category.icon} alt={group.category.name} className="w-6 h-6" />
+                            <p className="text-white font-opensans font-medium text-sm">{group.category.name}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {group.effects.map((effect, effectIndex) => (
+                            <div key={effectIndex} className="flex items-center justify-between">
+                              <p className="text-white/80 font-opensans text-xs">{effect}</p>
+                              <motion.button
+                                onClick={() => handleAskAI(effect)}
+                                className="px-2 py-1 bg-vibrant-orange/80 hover:bg-vibrant-orange text-white text-xs font-opensans font-medium rounded-full flex items-center gap-1"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <Bot className="w-3 h-3" />
+                                Ask AI
+                              </motion.button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* Product Info and Add to Cart */}
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div>
+                      <p className="text-white font-inter font-bold text-2xl">${selectedProductForPresentation?.price}</p>
+                      <p className="text-white/80 font-opensans text-xs">per bottle</p>
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-white/90 font-opensans text-sm">60 capsules</p>
+                      <p className="text-white/90 font-opensans text-sm">30-day supply</p>
+                      <p className="text-white/90 font-opensans text-sm">500mg per capsule</p>
+                    </div>
+                  </div>
+                  
+                  <motion.button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const mushroom = mushrooms.find(m => m.id === selectedProductForPresentation?.id);
+                      if (mushroom) {
+                        await handleAddToCart(mushroom);
+                      } else {
+                        onAddToCart(selectedProductForPresentation!);
+                      }
+                    }}
+                    className="relative px-3 py-1.5 rounded-md bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl border border-white/30 shadow-md overflow-hidden group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {/* Liquid glass effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+
+                    {/* Button content */}
+                    <div className="relative flex items-center gap-1.5 text-white">
+                      <ShoppingCart className="w-2.5 h-2.5" />
+                      <span className="font-opensans font-semibold text-xs">
+                        Add to Cart
+                      </span>
+                    </div>
+
+                    {/* Glass reflection */}
+                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-md" />
+
+                    {/* Bottom glow */}
+                    <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-vibrant-orange/30 blur-sm rounded-full" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Product Card - Hidden on large screens */}
       <div
-        className="px-4 pt-16 flex flex-col items-center justify-start"
+        className="lg:hidden px-4 pt-16 flex flex-col items-center justify-start"
         style={{
           height: isDeployed ? 'calc(30vh - 64px)' : 'calc(100vh - 180px)',
           minHeight: '400px'
@@ -715,10 +987,10 @@ export const HomePage: React.FC<HomePageProps> = ({
         )}
       </div>
 
-      {/* Fixed Add to Cart Button - Always at bottom right of product area */}
+      {/* Fixed Add to Cart Button - Always at bottom right of product area (Mobile Only) */}
       {!showProductPresentation && (
         <div
-          className="fixed right-8 z-20 transition-all duration-500 ease-out"
+          className="fixed right-8 z-20 transition-all duration-500 ease-out lg:hidden"
           style={{
             bottom: '280px'
           }}
@@ -749,9 +1021,64 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       )}
 
-      {/* Chatbot Section */}
+      {/* Desktop Chatbot Section - Only visible on large screens */}
+      <div className="hidden lg:flex lg:w-2/3 lg:h-screen lg:items-center lg:justify-center lg:pt-16 lg:pl-4">
+        <div className="w-full max-w-4xl mx-auto px-8">
+          <div className="bg-black/40 backdrop-blur-sm border border-white/20 rounded-2xl p-8 h-[600px] flex flex-col shadow-2xl">
+
+
+            {/* Welcome Message - Show when no messages */}
+            {messages.length === 0 && (
+              <div className="flex items-start gap-4 mb-6">
+                <img src="/Janus-Logo.png" alt="AI Assistant" className="w-8 h-8 flex-shrink-0 mt-1" />
+                <div className="text-white text-base leading-relaxed">
+                  Hi there! 👋 I'm your AI mushroom supplement advisor. I can help you find the perfect supplements for your wellness goals. What would you like to improve today?
+                </div>
+              </div>
+            )}
+
+            {/* Messages Container */}
+            <div className="flex-1 overflow-y-auto mb-6 space-y-4">
+              {messages.map((message) => (
+                <div key={message.id} className="flex gap-4">
+                  {message.sender === 'bot' ? (
+                    <>
+                      <img src="/Janus-Logo.png" alt="AI Assistant" className="w-8 h-8 flex-shrink-0" />
+                      <div className="text-white text-base leading-relaxed max-w-[80%]">
+                        {message.content}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1 text-right">
+                        <div className="text-vibrant-orange text-base leading-relaxed max-w-[80%] ml-auto">
+                          {message.content}
+                        </div>
+                      </div>
+                      <img src="/User.png" alt="User" className="w-8 h-8 flex-shrink-0" />
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Input Field */}
+            <form onSubmit={handleSendMessage} className="flex">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Ask about supplements..."
+                className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 text-white placeholder-white/60 focus:outline-none focus:border-vibrant-orange text-base"
+              />
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Chatbot Section - Hidden on large screens */}
       <div
-        className={`fixed left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
+        className={`lg:hidden fixed left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
           isDeployed ? 'h-70dvh' : 'h-[250px]'
         } transition-all duration-500 ease-out`}
         style={{
