@@ -426,7 +426,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             })()}
 
             {/* Price and Product Info */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 mb-12">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 mb-32">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-white font-inter font-bold text-2xl">${selectedProductForPresentation.price}</span>
