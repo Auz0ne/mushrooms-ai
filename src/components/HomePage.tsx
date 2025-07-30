@@ -243,7 +243,17 @@ export const HomePage: React.FC<HomePageProps> = ({
   }
 
   return (
-    <div className="min-h-dvh bg-black flex flex-col">
+    <div 
+      className="min-h-dvh bg-black flex flex-col"
+      style={{
+        overflow: 'hidden',
+        touchAction: 'none',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
+        WebkitTapHighlightColor: 'transparent'
+      }}
+    >
       {/* Header - Absolutely positioned with blur */}
       <header className="absolute top-0 left-0 right-0 p-4 text-center bg-black/20 backdrop-blur-xl z-50">
         <div className="flex items-center justify-center gap-3">
@@ -753,17 +763,15 @@ export const HomePage: React.FC<HomePageProps> = ({
           const messagesContainer = target.closest('.messages-container');
           if (messagesContainer) return; // Let messages scroll normally
 
-          e.stopPropagation();
           const startY = e.touches[0].clientY;
           let hasMoved = false;
 
           const handleTouchMove = (moveEvent: TouchEvent) => {
-            moveEvent.preventDefault();
-            moveEvent.stopPropagation();
             const deltaY = moveEvent.touches[0].clientY - startY;
 
             if (Math.abs(deltaY) > 30) {
               hasMoved = true;
+              moveEvent.preventDefault(); // Only prevent default when actually dragging
               if (deltaY < 0 && !isDeployed) {
                 // Dragged up - deploy chatbot
                 setIsDeployed(true);
@@ -792,17 +800,15 @@ export const HomePage: React.FC<HomePageProps> = ({
           const messagesContainer = target.closest('.messages-container');
           if (messagesContainer) return; // Let messages scroll normally
 
-          e.stopPropagation();
           const startY = e.clientY;
           let hasMoved = false;
 
           const handlePointerMove = (moveEvent: PointerEvent) => {
-            moveEvent.preventDefault();
-            moveEvent.stopPropagation();
             const deltaY = moveEvent.clientY - startY;
 
             if (Math.abs(deltaY) > 30) {
               hasMoved = true;
+              moveEvent.preventDefault(); // Only prevent default when actually dragging
               if (deltaY < 0 && !isDeployed) {
                 // Dragged up - deploy chatbot
                 setIsDeployed(true);
