@@ -1039,27 +1039,88 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Messages Container */}
             <div className="flex-1 overflow-y-auto mb-6 space-y-4">
-              {messages.map((message) => (
-                <div key={message.id} className="flex gap-4">
-                  {message.sender === 'bot' ? (
-                    <>
-                      <img src="/Janus-Logo.png" alt="AI Assistant" className="w-8 h-8 flex-shrink-0" />
-                      <div className="text-white text-base leading-relaxed max-w-[80%]">
-                        {message.content}
+              {messages.map((message) => {
+                // Handle ad messages
+                if (message.sender === 'ad' && message.adData) {
+                  return (
+                    <div key={message.id} className="flex gap-4 justify-start">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                        </svg>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex-1 text-right">
-                        <div className="text-vibrant-orange text-base leading-relaxed max-w-[80%] ml-auto">
-                          {message.content}
+                      <div className="max-w-[80%] rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 relative">
+                        <div className="absolute -top-2 left-3 bg-purple-500 text-white text-xs px-2 py-1 rounded-full">
+                          Sponsored
+                        </div>
+                        <div className="mt-2">
+                          {message.adData.title && (
+                            <h4 className="font-inter font-semibold text-dark-matte text-sm mb-2">
+                              {message.adData.title}
+                            </h4>
+                          )}
+                          <p className="font-opensans text-sm text-dark-matte leading-relaxed">
+                            {message.content}
+                          </p>
+                          {message.adData.cta && (
+                            <div className="flex justify-end mt-3">
+                              <motion.button
+                                onClick={() => {
+                                  console.log('Ad clicked:', { adId: message.adData!.id, url: message.adData!.url, impressionId: message.adData!.impressionId });
+                                  handleAdClick(message.adData!.id, message.adData!.impressionId);
+                                  if (message.adData!.url && message.adData!.url !== 'https://example.com/test-ad') {
+                                    console.log('Opening URL:', message.adData!.url);
+                                    window.open(message.adData!.url, '_blank', 'noopener,noreferrer');
+                                  } else {
+                                    console.log('No valid URL available for this ad, showing alert instead');
+                                    alert('Ad clicked! This would normally open: ' + (message.adData!.url || 'No URL'));
+                                  }
+                                }}
+                                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-opensans font-semibold py-2 px-4 rounded-lg text-sm"
+                                whileHover={{
+                                  scale: 1.05,
+                                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                                  transition: { duration: 0.2 }
+                                }}
+                                whileTap={{
+                                  scale: 0.95,
+                                  transition: { duration: 0.1 }
+                                }}
+                              >
+                                {message.adData.cta}
+                              </motion.button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <img src="/User.png" alt="User" className="w-8 h-8 flex-shrink-0" />
-                    </>
-                  )}
-                </div>
-              ))}
+                    </div>
+                  );
+                }
+
+                // Handle regular messages
+                return (
+                  <div key={message.id} className="flex gap-4">
+                    {message.sender === 'bot' ? (
+                      <>
+                        <img src="/Janus-Logo.png" alt="AI Assistant" className="w-8 h-8 flex-shrink-0" />
+                        <div className="text-white text-base leading-relaxed max-w-[80%]">
+                          {message.content}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex-1 text-right">
+                          <div className="text-vibrant-orange text-base leading-relaxed max-w-[80%] ml-auto">
+                            {message.content}
+                          </div>
+                        </div>
+                        <img src="/User.png" alt="User" className="w-8 h-8 flex-shrink-0" />
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Input Field */}

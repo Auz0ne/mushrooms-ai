@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Minus, Trash2, CreditCard, ShoppingCart, Sparkles, X, User, Send } from 'lucide-react';
-import { CartItem, Product, ChatMessage } from '../types';
+import { CartItem, Product } from '../types';
 import { getCategoryForEffect } from '../utils/categoryIcons';
 import { ProductService } from '../services/productService';
 import { StripeService } from '../services/stripeService';
@@ -101,7 +101,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     },
   ]);
   const [showChatbot, setShowChatbot] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<Array<{id: string, content: string, sender: 'user' | 'bot'}>>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatTyping, setIsChatTyping] = useState(false);
   const [selectedEffect, setSelectedEffect] = useState<string>('');
@@ -355,8 +355,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setChatMessages([{
       id: Date.now().toString(),
       content: initialMessage,
-      sender: 'bot',
-      timestamp: new Date()
+      sender: 'bot'
     }]);
   };
 
@@ -381,8 +380,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const userMessage = {
       id: Date.now().toString(),
       content: chatInput,
-      sender: 'user' as const,
-      timestamp: new Date()
+      sender: 'user' as const
     };
     
     setChatMessages(prev => [...prev, userMessage]);
@@ -394,8 +392,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       const botMessage = {
         id: (Date.now() + 1).toString(),
         content: `That's a great question about ${selectedEffect}! Based on current research, the effects typically become noticeable within 2-4 weeks of consistent use. The key is maintaining a regular supplementation schedule to allow the bioactive compounds to build up in your system.`,
-        sender: 'bot' as const,
-        timestamp: new Date()
+        sender: 'bot' as const
       };
       setChatMessages(prev => [...prev, botMessage]);
       setIsChatTyping(false);
@@ -499,9 +496,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-black relative lg:h-screen lg:overflow-hidden">
+    <div className="min-h-screen bg-black relative">
       {/* Header */}
-      <header className="p-4 lg:flex-shrink-0">
+      <header className="p-4">
         <div className="flex items-center gap-4">
           <motion.button
             onClick={onGoBack}
@@ -516,11 +513,44 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       </header>
 
       {/* Desktop Layout - Two Columns */}
-      <div className="lg:flex lg:h-[calc(100vh-80px)] lg:pt-0">
-        {/* Left Column - Effects, Badges, and Promotions - Scrollable */}
-        <div className="lg:w-1/2 lg:px-8 lg:overflow-y-auto lg:h-full lg:pt-0">
-          <div className="p-4 space-y-6 lg:p-0 lg:h-full lg:overflow-y-auto lg:pt-0 lg:pb-16">
-
+      <div className="lg:flex lg:h-screen lg:pt-16">
+        {/* Left Column - Effects, Badges, and Promotions */}
+        <div className="lg:w-1/2 lg:px-8 lg:overflow-y-auto">
+          <div className="p-4 space-y-6 lg:p-0">
+            {/* Completed Archetypes Badges */}
+            {completedArchetypes.length > 0 && (
+              <div className="mx-4 mb-6 p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg">
+                <div className="flex flex-wrap gap-3 justify-start">
+                  {completedArchetypes.map((archetypeName) => {
+                    // Map archetype names to their icons
+                    const archetypeIcons: Record<string, string> = {
+                      'Mentalist': '/compressed_Brain-Photoroom.png',
+                      'Guardian': '/compressed_Shield-Photoroom.png',
+                      'Athlete': '/compressed_Lightning-Photoroom.png',
+                      'Radiant': '/compressed_Lotus-Photoroom.png',
+                      'Zen Seeker': '/compressed_Spiral-Photoroom.png',
+                      'Gut Guru': '/compressed_Drop-Photoroom.png',
+                    };
+                    
+                    const archetypeIcon = archetypeIcons[archetypeName] || '/compressed_Spiral-Photoroom.png';
+                    
+                    return (
+                      <motion.div
+                        key={archetypeName}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex flex-col items-center gap-2 p-3"
+                      >
+                        <img src={archetypeIcon} alt={archetypeName} className="w-8 h-8" />
+                        <span className="text-white font-opensans font-semibold text-xs text-center">
+                          {archetypeName}
+                        </span>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Your Enhanced Self */}
             {categoryScores.length > 0 && (
@@ -599,11 +629,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
         </div>
 
-        {/* Right Column - Cart and Checkout - Fixed */}
-        <div className="lg:w-1/2 lg:px-8 lg:overflow-hidden lg:h-full lg:pt-0 lg:pb-8">
-          <div className="p-4 space-y-6 lg:p-0 lg:h-full lg:flex lg:flex-col lg:overflow-hidden lg:pt-0 lg:pb-8">
+        {/* Right Column - Cart and Checkout */}
+        <div className="lg:w-1/2 lg:px-8 lg:overflow-y-auto">
+          <div className="p-4 space-y-6 lg:p-0">
             {/* Shopping List */}
-            <div className="p-4 lg:flex-shrink-0">
+            <div className="p-4">
               <h2 className="font-inter font-semibold text-white mb-4">Your Supplements</h2>
               <div className="space-y-3">
                 {cartItems.map((item) => {
@@ -686,9 +716,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 })}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
             {/* Order Summary */}
-            <div className="p-4 lg:flex-shrink-0">
+            <div className="p-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="font-opensans text-white/80">Subtotal:</span>
@@ -711,8 +744,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
             {/* AI Assistant Section */}
             {showChatbot && (
-              <div ref={aiAssistantRef} className="px-4 mt-2 lg:flex-1 lg:overflow-hidden lg:flex lg:flex-col">
-                <div className="flex items-center justify-between mb-4 lg:flex-shrink-0">
+              <div ref={aiAssistantRef} className="px-4 mt-2">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="font-inter font-semibold text-white text-lg">
                     Ask our AI for supplement advice
                   </h3>
@@ -727,112 +760,52 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
                 
                 {/* Chat Messages */}
-                <div className="overflow-y-auto space-y-4 mb-4 max-h-80 lg:flex-1 lg:overflow-y-auto">
-                  {chatMessages.map((message) => {
-                    // Handle ad messages
-                    if (message.sender === 'ad' && message.adData) {
-                      return (
-                        <div key={message.id} className="flex gap-3 justify-start">
-                          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div className="max-w-[80%] rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-3 relative">
-                            <div className="absolute -top-2 left-3 bg-purple-500 text-white text-xs px-2 py-1 rounded-full">
-                              Sponsored
-                            </div>
-                            <div className="mt-2">
-                              {message.adData.title && (
-                                <h4 className="font-inter font-semibold text-dark-matte text-xs mb-1">
-                                  {message.adData.title}
-                                </h4>
-                              )}
-                              <p className="font-opensans text-xs text-dark-matte leading-snug">
-                                {message.content}
+                <div className="overflow-y-auto space-y-4 mb-4 max-h-80">
+                  {chatMessages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 ${
+                        message.sender === 'user' ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      {message.sender === 'bot' && (
+                        <img 
+                          src="/Janus-Logo.png" 
+                          alt="AI Assistant" 
+                          className="w-8 h-8 flex-shrink-0"
+                        />
+                      )}
+
+                      <div className="max-w-[80%]">
+                        <div className={`font-opensans text-xs leading-snug drop-shadow-sm ${
+                          message.sender === 'user' ? 'text-vibrant-orange font-semibold' : 'text-white'
+                        }`}>
+                          {message.sender === 'bot' ? (
+                            message.content.split('\n').map((paragraph, index) => (
+                              <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                                {paragraph}
                               </p>
-                              {message.adData.cta && (
-                                <div className="flex justify-end mt-2">
-                                  <motion.button
-                                    onClick={() => {
-                                      console.log('Ad clicked:', { adId: message.adData!.id, url: message.adData!.url, impressionId: message.adData!.impressionId });
-                                      // Handle ad click tracking here if needed
-                                      if (message.adData!.url && message.adData!.url !== 'https://example.com/test-ad') {
-                                        console.log('Opening URL:', message.adData!.url);
-                                        window.open(message.adData!.url, '_blank', 'noopener,noreferrer');
-                                      } else {
-                                        console.log('No valid URL available for this ad, showing alert instead');
-                                        alert('Ad clicked! This would normally open: ' + (message.adData!.url || 'No URL'));
-                                      }
-                                    }}
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-opensans font-semibold py-1 px-3 rounded text-xs"
-                                    whileHover={{
-                                      scale: 1.05,
-                                      boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                                      transition: { duration: 0.2 }
-                                    }}
-                                    whileTap={{
-                                      scale: 0.95,
-                                      transition: { duration: 0.1 }
-                                    }}
-                                  >
-                                    {message.adData.cta}
-                                  </motion.button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            ))
+                          ) : (
+                            <p>{message.content}</p>
+                          )}
                         </div>
-                      );
-                    }
-
-                    // Handle regular messages
-                    return (
-                      <div
-                        key={message.id}
-                        className={`flex gap-3 ${
-                          message.sender === 'user' ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
-                        {message.sender === 'bot' && (
-                          <img 
-                            src="/Janus-Logo.png" 
-                            alt="AI Assistant" 
-                            className="w-8 h-8 flex-shrink-0"
-                          />
-                        )}
-
-                        <div className="max-w-[80%]">
-                          <div className={`font-opensans text-xs leading-snug drop-shadow-sm ${
-                            message.sender === 'user' ? 'text-vibrant-orange font-semibold' : 'text-white'
-                          }`}>
-                            {message.sender === 'bot' ? (
-                              message.content.split('\n').map((paragraph, index) => (
-                                <p key={index} className={index > 0 ? 'mt-2' : ''}>
-                                  {paragraph}
-                                </p>
-                              ))
-                            ) : (
-                              <p>{message.content}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {message.sender === 'user' && (
-                          <img 
-                            src="/User.png" 
-                            alt="User" 
-                            className="w-8 h-8 flex-shrink-0"
-                          />
-                        )}
                       </div>
-                    );
-                  })}
+
+                      {message.sender === 'user' && (
+                        <img 
+                          src="/User.png" 
+                          alt="User" 
+                          className="w-8 h-8 flex-shrink-0"
+                        />
+                      )}
+                    </div>
+                  ))}
+
                 </div>
 
                 {/* Text Input */}
-                <form onSubmit={(e) => { e.preventDefault(); handleSendChatMessage(); }} className="flex gap-2 lg:flex-shrink-0">
+                <form onSubmit={(e) => { e.preventDefault(); handleSendChatMessage(); }} className="flex gap-2">
                   <input
                     type="text"
                     value={chatInput}
@@ -870,8 +843,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         </motion.button>
       </div>
 
-      {/* Desktop Checkout Button - Centered in right column */}
-      <div className="hidden lg:block fixed bottom-8 right-1/4 transform translate-x-1/2">
+      {/* Desktop Checkout Button - Fixed at bottom right */}
+      <div className="hidden lg:block fixed bottom-8 right-8">
         <motion.button
           onClick={handleStripePayment}
           className="bg-vibrant-orange hover:bg-orange-600 text-white font-opensans font-semibold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-vibrant-orange focus:ring-offset-2 shadow-lg"
