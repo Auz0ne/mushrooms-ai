@@ -713,7 +713,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div
           className="fixed right-8 z-20 transition-all duration-500 ease-out"
           style={{
-            bottom: '204px'
+            bottom: '280px'
           }}
         >
           <motion.button
@@ -745,7 +745,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* Chatbot Section */}
       <div
         className={`fixed left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 rounded-t-3xl p-3 flex flex-col shadow-lg cursor-ns-resize z-40 ${
-          isDeployed ? 'h-70dvh' : 'h-[180px]'
+          isDeployed ? 'h-70dvh' : 'h-[250px]'
         } transition-all duration-500 ease-out`}
         style={{
           bottom: isMobile && keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'
